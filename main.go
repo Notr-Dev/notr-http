@@ -18,11 +18,11 @@ func NewServer(port string) *Server {
 }
 
 type Router struct {
-	mux http.ServeMux
+	Mux http.ServeMux
 }
 
 func NewRouter() *Router {
 	return &Router{
-		mux: *http.NewServeMux(),
+		Mux: *http.NewServeMux(),
 	}
 }
