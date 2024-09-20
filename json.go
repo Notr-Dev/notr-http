@@ -9,7 +9,7 @@ type Writer struct {
 	http.ResponseWriter
 }
 
-func DecodeJson(r *http.Request, v interface{}) error {
+func (r *Request) GetJSONBody(v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }
 
