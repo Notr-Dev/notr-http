@@ -3,7 +3,7 @@ package notrhttp
 import "net/http"
 
 type Server struct {
-	router *Router
+	Router *Router
 	port   string
 }
 
@@ -12,7 +12,7 @@ func NewServer(port string) *Server {
 		port = ":" + port
 	}
 	return &Server{
-		router: NewRouter(),
+		Router: NewRouter(),
 		port:   port,
 	}
 }
