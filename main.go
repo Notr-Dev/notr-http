@@ -26,13 +26,13 @@ func NewServer(port string, version string) *Server {
 
 func (s *Server) Run() error {
 	fmt.Println("Started " + s.Name)
-	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.Get("/", func(rw Writer, r *Request) {
-			rw.RespondWithSuccess(map[string]string{
-				"message": fmt.Sprintf("Welcome to the %s Rest API.", s.Name),
-				"version": s.Version,
-			})
+	s.Get("/", func(rw Writer, r *Request) {
+		rw.RespondWithSuccess(map[string]string{
+			"message": fmt.Sprintf("Welcome to the %s Rest API.", s.Name),
+			"version": s.Version,
 		})
+	})
+	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.Router.ServeHTTP(w, r)
 	}))
 }
