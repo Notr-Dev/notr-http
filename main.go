@@ -17,6 +17,12 @@ func NewServer(port string) *Server {
 	}
 }
 
+func (s *Server) Run() error {
+	return http.ListenAndServe(s.port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.Router.Mux.ServeHTTP(w, r)
+	}))
+}
+
 type Router struct {
 	Mux http.ServeMux
 }
