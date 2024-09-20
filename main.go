@@ -23,8 +23,8 @@ func NewServer(port string) *Server {
 }
 
 func (s *Server) Run() error {
+	fmt.Println("Started server " + s.Name)
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Started server " + s.Name)
 		s.Router.Mux.ServeHTTP(w, r)
 	}))
 }
