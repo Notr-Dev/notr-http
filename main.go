@@ -6,7 +6,7 @@ import (
 )
 
 type Server struct {
-	Router *Router
+	Router *http.ServeMux
 	Name   string
 	Port   string
 }
@@ -16,16 +16,16 @@ func NewServer(port string) *Server {
 		port = ":" + port
 	}
 	return &Server{
-		Router: NewRouter(),
+		Router: http.NewServeMux(),
 		Port:   port,
 		Name:   "Unnamed Server",
 	}
 }
 
 func (s *Server) Run() error {
-	fmt.Println("Started server " + s.Name)
+	fmt.Println("Started " + s.Name)
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.Router.Mux.ServeHTTP(w, r)
+		s.Router.ServeHTTP(w, r)
 	}))
 }
 
@@ -33,12 +33,26 @@ func (s *Server) SetName(name string) {
 	s.Name = name
 }
 
-type Router struct {
-	Mux http.ServeMux
+func (s *Server) genericHandler(method string, path string, handler http.HandlerFunc) {
+	s.Router.HandleFunc(method+" "+path, handler)
 }
 
-func NewRouter() *Router {
-	return &Router{
-		Mux: *http.NewServeMux(),
-	}
+func (s *Server) Get(path string, handler http.HandlerFunc) {
+	s.genericHandler(http.MethodGet, path, handler)
+}
+
+func (s *Server) Post(path string, handler http.HandlerFunc) {
+	s.genericHandler(http.MethodPost, path, handler)
+}
+
+func (s *Server) Put(path string, handler http.HandlerFunc) {
+	s.genericHandler(http.MethodPut, path, handler)
+}
+
+func (s *Server) Delete(path string, handler http.HandlerFunc) {
+	s.genericHandler(http.MethodDelete, path, handler)
+}
+
+func (s *Server) Patch(path string, handler http.HandlerFunc) {
+	s.genericHandler(http.MethodPatch, path, handler)
 }
