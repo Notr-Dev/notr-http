@@ -33,26 +33,30 @@ func (s *Server) SetName(name string) {
 	s.Name = name
 }
 
-func (s *Server) genericHandler(method string, path string, handler http.HandlerFunc) {
-	s.Router.HandleFunc(method+" "+path, handler)
+type CustomHandler func(rw ResponseWriterWrapper, r *http.Request)
+
+func (s *Server) genericHandler(method string, path string, handler CustomHandler) {
+	s.Router.HandleFunc(method+" "+path, func(w http.ResponseWriter, r *http.Request) {
+		handler(ResponseWriterWrapper{w}, r)
+	})
 }
 
-func (s *Server) Get(path string, handler http.HandlerFunc) {
+func (s *Server) Get(path string, handler CustomHandler) {
 	s.genericHandler(http.MethodGet, path, handler)
 }
 
-func (s *Server) Post(path string, handler http.HandlerFunc) {
+func (s *Server) Post(path string, handler CustomHandler) {
 	s.genericHandler(http.MethodPost, path, handler)
 }
 
-func (s *Server) Put(path string, handler http.HandlerFunc) {
+func (s *Server) Put(path string, handler CustomHandler) {
 	s.genericHandler(http.MethodPut, path, handler)
 }
 
-func (s *Server) Delete(path string, handler http.HandlerFunc) {
+func (s *Server) Delete(path string, handler CustomHandler) {
 	s.genericHandler(http.MethodDelete, path, handler)
 }
 
-func (s *Server) Patch(path string, handler http.HandlerFunc) {
+func (s *Server) Patch(path string, handler CustomHandler) {
 	s.genericHandler(http.MethodPatch, path, handler)
 }
