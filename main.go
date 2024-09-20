@@ -1,10 +1,14 @@
 package notrhttp
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type Server struct {
 	Router *Router
-	port   string
+	Name   string
+	Port   string
 }
 
 func NewServer(port string) *Server {
@@ -13,14 +17,20 @@ func NewServer(port string) *Server {
 	}
 	return &Server{
 		Router: NewRouter(),
-		port:   port,
+		Port:   port,
+		Name:   "Unnamed Server",
 	}
 }
 
 func (s *Server) Run() error {
-	return http.ListenAndServe(s.port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Started server " + s.Name)
 		s.Router.Mux.ServeHTTP(w, r)
 	}))
+}
+
+func (s *Server) SetName(name string) {
+	s.Name = name
 }
 
 type Router struct {
