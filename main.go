@@ -33,11 +33,15 @@ func (s *Server) SetName(name string) {
 	s.Name = name
 }
 
-type Handler func(rw Writer, r *http.Request)
+type Request struct {
+	*http.Request
+}
+
+type Handler func(rw Writer, r *Request)
 
 func (s *Server) genericHandler(method string, path string, handler Handler) {
 	s.Router.HandleFunc(method+" "+path, func(w http.ResponseWriter, r *http.Request) {
-		handler(Writer{w}, r)
+		handler(Writer{w}, &Request{r})
 	})
 }
 
