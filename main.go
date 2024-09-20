@@ -6,25 +6,33 @@ import (
 )
 
 type Server struct {
-	Router *http.ServeMux
-	Name   string
-	Port   string
+	Router  *http.ServeMux
+	Name    string
+	Port    string
+	Version string
 }
 
-func NewServer(port string) *Server {
+func NewServer(port string, version string) *Server {
 	if port[0] != ':' {
 		port = ":" + port
 	}
 	return &Server{
-		Router: http.NewServeMux(),
-		Port:   port,
-		Name:   "Unnamed Server",
+		Router:  http.NewServeMux(),
+		Port:    port,
+		Name:    "Unnamed Server",
+		Version: version,
 	}
 }
 
 func (s *Server) Run() error {
 	fmt.Println("Started " + s.Name)
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.Get("/", func(rw Writer, r *Request) {
+			rw.RespondWithSuccess(map[string]string{
+				"message": fmt.Sprintf("Welcome to the %s Rest API.", s.Name),
+				"version": s.Version,
+			})
+		})
 		s.Router.ServeHTTP(w, r)
 	}))
 }
