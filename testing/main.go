@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"dev/services"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -38,11 +37,9 @@ func main() {
 		})
 	})
 
-	var db *sql.DB
+	DBService, getDB := services.NewDBService("test.sqlite")
 
-	var DBService = services.NewDBService("test.sqlite", &db)
-
-	var LoggerService = services.NewLoggerService(DBService, &db)
+	var LoggerService = services.NewLoggerService(DBService, getDB)
 
 	server.RegisterService(DBService)
 	server.RegisterService(LoggerService)
