@@ -2,6 +2,7 @@ package main
 
 import (
 	"dev/services"
+	"dev/types"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func main() {
-	server := notrhttp.NewServer("8080", "1.0")
+	server := notrhttp.NewServer[*types.Data]("8080", "1.0")
 	server.SetName("My Server")
 	server.Post("/test", func(rw notrhttp.Writer, r *notrhttp.Request) {
 		type Response struct {

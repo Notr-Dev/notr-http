@@ -2,31 +2,31 @@ package notrhttp
 
 import "fmt"
 
-type Service struct {
+type Service[T any] struct {
 	Name          string
 	isInitialized bool
-	initFunction  func(s *Service) error
+	initFunction  func(service *Service[T], server *Server[T]) error
 
-	Dependencies []*Service
+	Dependencies []*Service[T]
 }
 
-func NewService(name string) Service {
-	return Service{
+func NewService[T any](name string) Service[T] {
+	return Service[T]{
 		Name:          name,
 		isInitialized: false,
-		initFunction:  func(s *Service) error { return nil },
+		initFunction:  func(service *Service[T], server *Server[T]) error { return nil },
 	}
 }
 
-func (s *Service) SetInitFunction(initFunction func(s *Service) error) {
+func (s *Service[T]) SetInitFunction(initFunction func(service *Service[T], server *Server[T]) error) {
 	s.initFunction = initFunction
 }
 
-func (s *Service) initialize() error {
+func (s *Service[T]) initialize(server *Server[T]) error {
 	if s.isInitialized {
 		return fmt.Errorf("Service %s is already initialized", s.Name)
 	}
-	err := s.initFunction(s)
+	err := s.initFunction(s, server)
 	if err != nil {
 		return err
 	}
@@ -34,14 +34,14 @@ func (s *Service) initialize() error {
 	return nil
 }
 
-func (s *Service) AddDependency(dep *Service) {
+func (s *Service[T]) AddDependency(dep *Service[T]) {
 	if dep == s {
 		panic(fmt.Sprintf("Service %s cannot have itself as a dependency", s.Name))
 	}
 	s.Dependencies = append(s.Dependencies, dep)
 }
 
-func (s *Service) CanRun() bool {
+func (s *Service[T]) CanRun() bool {
 	if len(s.Dependencies) == 0 {
 		return true
 	}
