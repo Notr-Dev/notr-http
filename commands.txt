@@ -1,0 +1,10 @@
+GOPRIVATE=github.com/Notr-Dev/notr-logger/server go get github.com/Notr-Dev/notr-logger/server
+
+go get github.com/Notr-Dev/notr-logger/server
+go get github.com/Notr-Dev/notr-http
+
+go env -w GOPRIVATE=github.com/Notr-Dev/*
+
+
+go get -u ./...
+go get -u
