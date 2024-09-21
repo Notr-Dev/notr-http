@@ -7,6 +7,7 @@ import (
 )
 
 type DBServiceConfig struct {
+	Name       string
 	DBPath     string
 	Migrations []Migration
 }
@@ -26,18 +27,22 @@ func (d *DBService) GetDB() *sql.DB {
 
 func NewDBService(config DBServiceConfig) *DBService {
 
+	if config.Name == "" {
+		config.Name = "Unnamed DB Service"
+	}
+
 	if config.DBPath == "" {
 		panic("DBPath is required")
 	}
 
 	if config.Migrations == nil {
-		panic("Migrations are required")
+		config.Migrations = make([]Migration, 0)
 	}
 
 	wrapper := &DBService{}
 	wrapper.Migrations = make([]versionedMigration, 0)
 	service := notrhttp.NewService(
-		notrhttp.WithServiceName("DB"),
+		notrhttp.WithServiceName(config.Name),
 		notrhttp.WithServiceInitFunction(func(service *notrhttp.Service) error {
 			db, err := sql.Open("sqlite3", config.DBPath)
 			if err != nil {
