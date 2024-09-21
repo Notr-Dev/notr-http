@@ -2,7 +2,12 @@ package notrhttp
 
 import (
 	"fmt"
+	"io"
+	"mime"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -107,12 +112,16 @@ func (s *Server) Run() error {
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wasRightPath := false
 		for _, route := range s.routes {
-			if r.URL.Path == route.Path {
+			isMatch, params := matchPath(r.URL.Path, route.Path)
+			if isMatch {
+				fmt.Println("Path matched: ", route.Path)
 				wasRightPath = true
 				if r.Method == route.Method {
-					route.Handler(Writer{w, false}, &Request{r})
+					route.Handler(Writer{w, false}, &Request{r, params})
 					return
 				}
+			} else {
+				fmt.Println("Path did not match: ", route.Path)
 			}
 
 		}
@@ -123,7 +132,38 @@ func (s *Server) Run() error {
 		http.NotFound(w, r)
 	}))
 }
+func matchPath(path string, pattern string) (is bool, params map[string]string) {
+	fmt.Println("Path: ", path)
+	fmt.Println("Pattern: ", pattern)
+	if path == "" {
+		path = "/"
+	}
+	if path[0] != '/' {
+		path = "/" + path
+	}
+	pathComponents := strings.Split(path, "/")
+	patternComponents := strings.Split(pattern, "/")
 
+	fmt.Println("Path Components: ", pathComponents)
+	fmt.Println("Pattern Components: ", patternComponents)
+
+	if len(pathComponents) != len(patternComponents) {
+		return false, map[string]string{}
+	}
+
+	params = map[string]string{}
+
+	for i, component := range patternComponents {
+		if component != pathComponents[i] && !strings.HasPrefix(component, "{") {
+			return false, map[string]string{}
+		} else {
+			if strings.HasPrefix(component, "{") {
+				params[component[1:len(component)-1]] = pathComponents[i]
+			}
+		}
+	}
+	return true, params
+}
 func (s *Server) genericHandler(method string, path string, handler Handler) {
 	s.routes = append(s.routes,
 		Route{
@@ -151,4 +191,31 @@ func (s *Server) Delete(path string, handler Handler) {
 
 func (s *Server) Patch(path string, handler Handler) {
 	s.genericHandler(http.MethodPatch, path, handler)
+}
+
+func (s *Server) StaticServe(path string, dir string) {
+	s.routes = append(s.routes,
+		Route{
+			Method: http.MethodGet,
+			Path:   path + "/{filename}",
+			Handler: func(rw Writer, r *Request) {
+				filename := r.Params["filename"]
+				filePath := filepath.Join(dir, filename)
+				fmt.Println("Serving file: ", filePath)
+
+				file, err := os.Open(filePath)
+				if err != nil {
+					http.Error(rw, "File not found", http.StatusNotFound)
+					return
+				}
+				defer file.Close()
+
+				rw.Header().Set("Content-Type", mime.TypeByExtension(filepath.Ext(filePath)))
+
+				if _, err := io.Copy(rw, file); err != nil {
+					http.Error(rw, "Error serving file", http.StatusInternalServerError)
+				}
+			},
+		},
+	)
 }

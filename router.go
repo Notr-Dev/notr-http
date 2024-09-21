@@ -16,6 +16,7 @@ type Handler func(rw Writer, r *Request)
 
 type Request struct {
 	*http.Request
+	Params map[string]string
 }
 
 type Writer struct {
