@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type Job struct {
+	Name     string
+	Interval time.Duration
+	Job      func() error
+}
+
 type Server struct {
 	Name    string
 	Port    string
@@ -13,6 +19,7 @@ type Server struct {
 
 	routes   []Route
 	services []*Service
+	jobs     []Job
 }
 
 func NewServer(server Server) *Server {
@@ -27,11 +34,15 @@ func NewServer(server Server) *Server {
 	}
 	server.routes = []Route{}
 	server.services = []*Service{}
+	server.jobs = []Job{}
 	return &server
 }
 
 func (s *Server) RegisterService(service *Service) {
 	s.services = append(s.services, service)
+}
+func (s *Server) RegisterJob(job Job) {
+	s.jobs = append(s.jobs, job)
 }
 
 func (s *Server) Run() error {
@@ -80,6 +91,19 @@ func (s *Server) Run() error {
 			"version": s.Version,
 		})
 	})
+
+	for _, job := range s.jobs {
+		go func(job Job) {
+			for {
+				err := job.Job()
+				if err != nil {
+					fmt.Printf("Error in job %s: %s\n", job.Name, err.Error())
+				}
+				time.Sleep(job.Interval)
+			}
+		}(job)
+	}
+
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wasRightPath := false
 		for _, route := range s.routes {

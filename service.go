@@ -18,12 +18,15 @@ func NewService(service Service) *Service {
 	if service.Name == "" {
 		service.Name = "Unnamed Service"
 	}
-	if service.Path == "" {
-		panic("Path is required")
+	if len(service.Routes) > 0 {
+		if service.Path == "" {
+			panic("Path is required")
+		}
+		if service.Path[0] != '/' {
+			panic("Path must start with a '/'")
+		}
 	}
-	if service.Path[0] != '/' {
-		panic("Path must start with a '/'")
-	}
+
 	service.isInitialized = false
 	if service.InitFunction == nil {
 		service.InitFunction = func(service *Service) error { return nil }

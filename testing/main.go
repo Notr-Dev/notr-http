@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -59,6 +61,15 @@ func main() {
 		Subpath:    "/db",
 	})
 	LoggerService := logger_service.NewLoggerService(DBServiceWrapper)
+
+	server.RegisterJob(notrhttp.Job{
+		Name:     "Test Job",
+		Interval: 5 * time.Second,
+		Job: func() error {
+			fmt.Println("Test Job")
+			return nil
+		},
+	})
 
 	server.RegisterService(DBServiceWrapper.Service)
 	server.RegisterService(LoggerService)
