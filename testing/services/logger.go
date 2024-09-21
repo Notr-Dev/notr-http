@@ -1,4 +1,4 @@
-package services
+package logger_service
 
 import (
 	"database/sql"

@@ -1,7 +1,8 @@
 package main
 
 import (
-	"dev/services"
+	"database/sql"
+	logger_service "dev/services"
 	"dev/services/db_service"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -38,11 +39,24 @@ func main() {
 		})
 	})
 
+	mig := db_service.Migration{
+		Up: func(db *sql.DB) error {
+			_, err := db.Exec("CREATE TABLE test (id INTEGER PRIMARY KEY, log TEXT)")
+			return err
+		},
+		Down: func(db *sql.DB) error {
+			_, err := db.Exec("DROP TABLE test")
+			return err
+		},
+	}
+
 	DBServiceWrapper := db_service.NewDBService(db_service.DBServiceConfig{
 		DBPath:     "test.sqlite",
-		Migrations: make([]db_service.Migration, 0),
+		Migrations: []db_service.Migration{mig},
+		Name:       "DB Service",
+		Subpath:    "/db",
 	})
-	LoggerService := services.NewLoggerService(DBServiceWrapper)
+	LoggerService := logger_service.NewLoggerService(DBServiceWrapper)
 
 	server.RegisterService(DBServiceWrapper.Service)
 	server.RegisterService(LoggerService)

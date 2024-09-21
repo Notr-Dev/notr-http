@@ -37,6 +37,10 @@ var initialMigration = Migration{
 
 func (d *DBService) AddMigrations(migrations ...Migration) error {
 
+	if len(migrations) == 0 {
+		return nil
+	}
+
 	fmt.Printf("Adding %d migrations\n", len(migrations))
 
 	toAdd := make([]versionedMigration, 0)
@@ -55,17 +59,22 @@ func (d *DBService) AddMigrations(migrations ...Migration) error {
 		return err
 	}
 
+	fmt.Println("Latest version:", latestVersion)
+
 	for _, mig := range d.Migrations {
 		if mig.Version > latestVersion {
+			fmt.Println("Running migration", mig.Version)
 			err := mig.Migration.Up(d.Database)
 			if err != nil {
 				return err
 			}
+			fmt.Println("Migration", mig.Version, "completed")
 			err = insertMigrationRecord(d.Database, mig.Version)
 			if err != nil {
 
 				return err
 			}
+			fmt.Println("Migration record inserted")
 		}
 	}
 

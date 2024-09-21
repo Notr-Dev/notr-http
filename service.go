@@ -6,9 +6,11 @@ import (
 
 type Service struct {
 	Name          string
+	Path          string
 	isInitialized bool
 	initFunction  func(service *Service) error
 
+	Routes       []Route
 	Dependencies []*Service
 }
 
@@ -51,6 +53,18 @@ func WithServiceDependencies(dependencies ...*Service) func(*Service) {
 	}
 }
 
+func WithServiceSubpath(path string) func(*Service) {
+	return func(s *Service) {
+		s.Path = path
+	}
+}
+
+func WithServiceRoutes(routes ...Route) func(*Service) {
+	return func(s *Service) {
+		s.Routes = routes
+	}
+}
+
 func (s *Service) initialize() error {
 	if s.isInitialized {
 		return fmt.Errorf("Service %s is already initialized", s.Name)
@@ -59,6 +73,21 @@ func (s *Service) initialize() error {
 	if err != nil {
 		return err
 	}
+
+	if len(s.Routes) > 0 {
+
+		if s.Path[0] != '/' {
+			panic("Service Path must start with a '/'")
+		}
+
+		for i, route := range s.Routes {
+			if route.Path[0] != '/' {
+				panic("Route Path must start with a '/'")
+			}
+			s.Routes[i].Path = s.Path + route.Path
+		}
+	}
+
 	s.isInitialized = true
 	return nil
 }

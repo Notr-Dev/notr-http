@@ -68,7 +68,10 @@ func (s *Server) Run() error {
 			for _, service := range s.Services {
 				if !service.isInitialized && service.CanRun() {
 					allInitialized = false
-					service.initialize()
+					err := service.initialize()
+					if err != nil {
+						panic(err)
+					}
 				}
 
 				fmt.Printf("Service: %s, IsInit: %t, CanRun %t\n", service.Name, service.isInitialized, service.CanRun())
@@ -83,6 +86,12 @@ func (s *Server) Run() error {
 			time.Sleep(5 * time.Second)
 		}
 
+	}
+
+	for _, service := range s.Services {
+		for _, route := range service.Routes {
+			s.Routes = append(s.Routes, route)
+		}
 	}
 
 	fmt.Println("Started " + s.Name)
