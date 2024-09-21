@@ -7,33 +7,56 @@ import (
 	"time"
 )
 
-type Server[T any] struct {
+type Server struct {
+	Name    string
+	Port    string
+	Version string
+
 	Routes   []Route
-	Name     string
-	Port     string
-	Version  string
-	Services []Service[T]
-	Data     T
+	Services []Service
 }
 
-func NewServer[T any](port string, version string) *Server[T] {
+func NewServer(options ...func(*Server)) *Server {
+	svr := &Server{
+		Name:    "Unnamed Server",
+		Port:    ":8080",
+		Version: "1.0.0",
+
+		Routes:   []Route{},
+		Services: []Service{},
+	}
+	for _, o := range options {
+		o(svr)
+	}
+	return svr
+}
+
+func WithServerPort(port string) func(*Server) {
 	if port[0] != ':' {
 		port = ":" + port
 	}
-	return &Server[T]{
-		Routes:   []Route{},
-		Port:     port,
-		Name:     "Unnamed Server",
-		Version:  version,
-		Services: make([]Service[T], 0),
+	return func(s *Server) {
+		s.Port = port
 	}
 }
 
-func (s *Server[T]) RegisterService(service Service[T]) {
+func WithServerName(name string) func(*Server) {
+	return func(s *Server) {
+		s.Name = name
+	}
+}
+
+func WithServerVersion(version string) func(*Server) {
+	return func(s *Server) {
+		s.Version = version
+	}
+}
+
+func (s *Server) RegisterService(service Service) {
 	s.Services = append(s.Services, service)
 }
 
-func (s *Server[T]) Run() error {
+func (s *Server) Run() error {
 
 	if len(s.Services) == 0 {
 		fmt.Println("No services to start")
@@ -47,7 +70,7 @@ func (s *Server[T]) Run() error {
 
 		for _, service := range s.Services {
 			wg.Add(1)
-			go func(service Service[T]) {
+			go func(service Service) {
 				defer wg.Done()
 				for !service.CanRun() {
 					// Wait until the service can run
@@ -116,11 +139,7 @@ func (s *Server[T]) Run() error {
 	}))
 }
 
-func (s *Server[T]) SetName(name string) {
-	s.Name = name
-}
-
-func (s *Server[T]) genericHandler(method string, path string, handler Handler) {
+func (s *Server) genericHandler(method string, path string, handler Handler) {
 	s.Routes = append(s.Routes,
 		Route{
 			Method:  method,
@@ -129,22 +148,22 @@ func (s *Server[T]) genericHandler(method string, path string, handler Handler) 
 		})
 }
 
-func (s *Server[T]) Get(path string, handler Handler) {
+func (s *Server) Get(path string, handler Handler) {
 	s.genericHandler(http.MethodGet, path, handler)
 }
 
-func (s *Server[T]) Post(path string, handler Handler) {
+func (s *Server) Post(path string, handler Handler) {
 	s.genericHandler(http.MethodPost, path, handler)
 }
 
-func (s *Server[T]) Put(path string, handler Handler) {
+func (s *Server) Put(path string, handler Handler) {
 	s.genericHandler(http.MethodPut, path, handler)
 }
 
-func (s *Server[T]) Delete(path string, handler Handler) {
+func (s *Server) Delete(path string, handler Handler) {
 	s.genericHandler(http.MethodDelete, path, handler)
 }
 
-func (s *Server[T]) Patch(path string, handler Handler) {
+func (s *Server) Patch(path string, handler Handler) {
 	s.genericHandler(http.MethodPatch, path, handler)
 }

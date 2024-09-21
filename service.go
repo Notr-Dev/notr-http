@@ -2,27 +2,54 @@ package notrhttp
 
 import "fmt"
 
-type Service[T any] struct {
+type Service struct {
 	Name          string
 	isInitialized bool
-	initFunction  func(service *Service[T], server *Server[T]) error
+	initFunction  func(service *Service, server *Server) error
 
-	Dependencies []*Service[T]
+	Dependencies []*Service
 }
 
-func NewService[T any](name string) Service[T] {
-	return Service[T]{
-		Name:          name,
+func NewService(opts ...func(*Service)) *Service {
+	service := &Service{
+		Name:          "Unnamed Service",
 		isInitialized: false,
-		initFunction:  func(service *Service[T], server *Server[T]) error { return nil },
+		initFunction:  func(service *Service, server *Server) error { return nil },
+		Dependencies:  []*Service{},
+	}
+	for _, opt := range opts {
+		opt(service)
+	}
+	return service
+}
+
+func WithServiceName(name string) func(*Service) {
+	return func(s *Service) {
+		s.Name = name
 	}
 }
 
-func (s *Service[T]) SetInitFunction(initFunction func(service *Service[T], server *Server[T]) error) {
-	s.initFunction = initFunction
+func WithServiceInitFunction(initFunction func(service *Service, server *Server) error) func(*Service) {
+	return func(s *Service) {
+		s.initFunction = initFunction
+	}
 }
 
-func (s *Service[T]) initialize(server *Server[T]) error {
+func WithServiceDependencies(dependencies ...*Service) func(*Service) {
+	return func(s *Service) {
+		for _, dep := range dependencies {
+			if dep == s {
+				panic("Service cannot depend on itself")
+			}
+			if dep == nil {
+				panic("Dependency cannot be nil")
+			}
+		}
+		s.Dependencies = dependencies
+	}
+}
+
+func (s *Service) initialize(server *Server) error {
 	if s.isInitialized {
 		return fmt.Errorf("Service %s is already initialized", s.Name)
 	}
@@ -34,14 +61,7 @@ func (s *Service[T]) initialize(server *Server[T]) error {
 	return nil
 }
 
-func (s *Service[T]) AddDependency(dep *Service[T]) {
-	if dep == s {
-		panic(fmt.Sprintf("Service %s cannot have itself as a dependency", s.Name))
-	}
-	s.Dependencies = append(s.Dependencies, dep)
-}
-
-func (s *Service[T]) CanRun() bool {
+func (s *Service) CanRun() bool {
 	if len(s.Dependencies) == 0 {
 		return true
 	}

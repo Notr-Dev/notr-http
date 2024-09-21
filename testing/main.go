@@ -2,7 +2,6 @@ package main
 
 import (
 	"dev/services"
-	"dev/types"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -10,8 +9,11 @@ import (
 )
 
 func main() {
-	server := notrhttp.NewServer[*types.Data]("8080", "1.0")
-	server.SetName("My Server")
+	server := notrhttp.NewServer(
+		notrhttp.WithServerName("Test Server"),
+		notrhttp.WithServerPort(":8080"),
+		notrhttp.WithServerVersion("1.0.0"),
+	)
 	server.Post("/test", func(rw notrhttp.Writer, r *notrhttp.Request) {
 		type Response struct {
 			Password string `json:"password"`
@@ -35,8 +37,8 @@ func main() {
 		})
 	})
 
-	server.RegisterService(services.DBService)
-	server.RegisterService(services.LoggerService)
+	server.RegisterService(*services.DBService)
+	server.RegisterService(*services.LoggerService)
 
 	err := server.Run()
 	if err != nil {
