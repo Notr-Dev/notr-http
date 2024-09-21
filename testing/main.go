@@ -2,6 +2,7 @@ package main
 
 import (
 	"dev/services"
+	"dev/services/db_service"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -37,9 +38,9 @@ func main() {
 		})
 	})
 
-	DBServiceWrapper := services.NewDBService(services.DBServiceConfig{
+	DBServiceWrapper := db_service.NewDBService(db_service.DBServiceConfig{
 		DBPath:     "test.sqlite",
-		Migrations: make([]services.Migration, 0),
+		Migrations: make([]db_service.Migration, 0),
 	})
 	LoggerService := services.NewLoggerService(DBServiceWrapper)
 
