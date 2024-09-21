@@ -47,62 +47,23 @@ func (s *Server) RegisterJob(job Job) {
 
 func (s *Server) Run() error {
 
-	if len(s.Services) == 0 {
-		fmt.Println("No services to start")
-	} else {
-
-		fmt.Printf("Starting %d services\n", len(s.Services))
-
-		for {
-			allInitialized := true
-			for _, service := range s.Services {
-				if !service.isInitialized && service.CanRun() {
-					allInitialized = false
-					err := service.initialize()
-					if err != nil {
-						panic(err)
-					}
-				}
-
-				fmt.Printf("Service: %s, IsInit: %t, CanRun %t\n", service.Name, service.isInitialized, service.CanRun())
-
-				for _, dep := range service.Dependencies {
-					fmt.Printf("Dependency: %s, IsInit: %t\n", dep.Name, dep.isInitialized)
-				}
-			}
-			if allInitialized {
-				break
-			}
-			time.Sleep(5 * time.Second)
-		}
-
+	err := setupServices(s)
+	if err != nil {
+		return err
 	}
 
-	for _, service := range s.Services {
-		for _, route := range service.Routes {
-			s.Routes = append(s.Routes, route)
-		}
-	}
+	appendRoutes(s)
+
+	startJobs(s)
 
 	fmt.Println("Started " + s.Name)
+
 	s.Get("/", func(rw Writer, r *Request) {
 		rw.RespondWithSuccess(map[string]string{
 			"message": fmt.Sprintf("Welcome to the %s Rest API.", s.Name),
 			"version": s.Version,
 		})
 	})
-
-	for _, job := range s.Jobs {
-		go func(job Job) {
-			for {
-				err := job.Job()
-				if err != nil {
-					fmt.Printf("Error in job %s: %s\n", job.Name, err.Error())
-				}
-				time.Sleep(job.Interval)
-			}
-		}(job)
-	}
 
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wasRightPath := false
@@ -126,4 +87,57 @@ func (s *Server) Run() error {
 		}
 		http.NotFound(w, r)
 	}))
+}
+
+func appendRoutes(s *Server) {
+	for _, service := range s.Services {
+		s.Routes = append(s.Routes, service.Routes...)
+	}
+}
+
+func setupServices(s *Server) error {
+	if len(s.Services) == 0 {
+		fmt.Println("No services to start")
+		return nil
+	}
+
+	fmt.Printf("Starting %d services\n", len(s.Services))
+
+	for {
+		allInitialized := true
+		for _, service := range s.Services {
+			if !service.isInitialized && service.CanRun() {
+				allInitialized = false
+				err := service.initialize()
+				if err != nil {
+					return err
+				}
+			}
+
+			fmt.Printf("Service: %s, IsInit: %t, CanRun %t\n", service.Name, service.isInitialized, service.CanRun())
+
+			for _, dep := range service.Dependencies {
+				fmt.Printf("Dependency: %s, IsInit: %t\n", dep.Name, dep.isInitialized)
+			}
+		}
+		if allInitialized {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+	return nil
+}
+
+func startJobs(s *Server) {
+	for _, job := range s.Jobs {
+		go func(job Job) {
+			for {
+				err := job.Job()
+				if err != nil {
+					fmt.Printf("Error in job %s: %s\n", job.Name, err.Error())
+				}
+				time.Sleep(job.Interval)
+			}
+		}(job)
+	}
 }
