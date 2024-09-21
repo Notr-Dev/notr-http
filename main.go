@@ -5,8 +5,14 @@ import (
 	"net/http"
 )
 
+type Route struct {
+	Method  string
+	Path    string
+	Handler Handler
+}
+
 type Server struct {
-	Router  *http.ServeMux
+	Routes  []Route
 	Name    string
 	Port    string
 	Version string
@@ -17,7 +23,7 @@ func NewServer(port string, version string) *Server {
 		port = ":" + port
 	}
 	return &Server{
-		Router:  http.NewServeMux(),
+		Routes:  []Route{},
 		Port:    port,
 		Name:    "Unnamed Server",
 		Version: version,
@@ -33,7 +39,22 @@ func (s *Server) Run() error {
 		})
 	})
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.Router.ServeHTTP(w, r)
+		wasRightPath := false
+		for _, route := range s.Routes {
+			if r.URL.Path == route.Path {
+				wasRightPath = true
+				if r.Method == route.Method {
+					route.Handler(Writer{w}, &Request{r})
+					return
+				}
+			}
+
+		}
+		if wasRightPath {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		http.NotFound(w, r)
 	}))
 }
 
@@ -48,13 +69,12 @@ type Request struct {
 type Handler func(rw Writer, r *Request)
 
 func (s *Server) genericHandler(method string, path string, handler Handler) {
-	s.Router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != method {
-			http.NotFound(w, r)
-			return
-		}
-		handler(Writer{w}, &Request{r})
-	})
+	s.Routes = append(s.Routes,
+		Route{
+			Method:  method,
+			Path:    path,
+			Handler: handler,
+		})
 }
 
 func (s *Server) Get(path string, handler Handler) {
