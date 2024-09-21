@@ -35,3 +35,7 @@ func (rw *Writer) RespondWithUnauthorized(message string) {
 func (rw *Writer) RespondWithNotFound(message string) {
 	rw.RespondWithJson(http.StatusNotFound, map[string]string{"message": message})
 }
+
+func (rw *Writer) RespondWithBadRequest(message string) {
+	rw.RespondWithJson(http.StatusBadRequest, map[string]string{"message": message})
+}
