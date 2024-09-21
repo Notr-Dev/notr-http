@@ -1,6 +1,12 @@
 package main
 
-import notrhttp "github.com/Notr-Dev/notr-http"
+import (
+	"dev/services"
+
+	_ "github.com/mattn/go-sqlite3"
+
+	notrhttp "github.com/Notr-Dev/notr-http"
+)
 
 func main() {
 	server := notrhttp.NewServer("8080", "1.0")
@@ -27,9 +33,12 @@ func main() {
 			"message": "Logged",
 		})
 	})
+
+	server.RegisterService(services.DBService)
+	server.RegisterService(services.LoggerService)
+
 	err := server.Run()
 	if err != nil {
 		panic(err)
 	}
-
 }
