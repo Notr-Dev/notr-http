@@ -5,11 +5,6 @@ import (
 	"net/http"
 )
 
-type Writer struct {
-	http.ResponseWriter
-	HadRespondedEarlier bool
-}
-
 func (r *Request) GetJSONBody(v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }

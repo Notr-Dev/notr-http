@@ -5,12 +5,6 @@ import (
 	"net/http"
 )
 
-type Route struct {
-	Method  string
-	Path    string
-	Handler Handler
-}
-
 type Server struct {
 	Routes  []Route
 	Name    string
@@ -61,12 +55,6 @@ func (s *Server) Run() error {
 func (s *Server) SetName(name string) {
 	s.Name = name
 }
-
-type Request struct {
-	*http.Request
-}
-
-type Handler func(rw Writer, r *Request)
 
 func (s *Server) genericHandler(method string, path string, handler Handler) {
 	s.Routes = append(s.Routes,
