@@ -1,20 +1,27 @@
 package services
 
 import (
-	"dev/globals"
+	"database/sql"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
 )
 
-var DBService = notrhttp.NewService(
-	notrhttp.WithServiceName("DB Service"),
-	notrhttp.WithServiceInitFunction(func(service *notrhttp.Service, server *notrhttp.Server) error {
-		_, err := globals.Data.DB.Exec("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, log TEXT)")
+func NewDBService(dbPath string, database **sql.DB) *notrhttp.Service {
+	return notrhttp.NewService(
+		notrhttp.WithServiceName("DB"),
+		notrhttp.WithServiceInitFunction(func(service *notrhttp.Service) error {
+			db, err := sql.Open("sqlite3", dbPath)
+			if err != nil {
+				return err
+			}
 
-		if err != nil {
-			return err
-		}
+			if err := db.Ping(); err != nil {
+				return err
+			}
 
-		return nil
-	}),
-)
+			*database = db
+
+			return nil
+		}),
+	)
+}

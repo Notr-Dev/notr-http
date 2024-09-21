@@ -3,7 +3,6 @@ package notrhttp
 import (
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -13,7 +12,7 @@ type Server struct {
 	Version string
 
 	Routes   []Route
-	Services []Service
+	Services []*Service
 }
 
 func NewServer(options ...func(*Server)) *Server {
@@ -23,7 +22,7 @@ func NewServer(options ...func(*Server)) *Server {
 		Version: "1.0.0",
 
 		Routes:   []Route{},
-		Services: []Service{},
+		Services: []*Service{},
 	}
 	for _, o := range options {
 		o(svr)
@@ -52,7 +51,7 @@ func WithServerVersion(version string) func(*Server) {
 	}
 }
 
-func (s *Server) RegisterService(service Service) {
+func (s *Server) RegisterService(service *Service) {
 	s.Services = append(s.Services, service)
 }
 
@@ -64,50 +63,24 @@ func (s *Server) Run() error {
 
 		fmt.Printf("Starting %d services\n", len(s.Services))
 
-		var wg sync.WaitGroup
-		var mu sync.Mutex
-		errChan := make(chan error, len(s.Services))
-
-		for _, service := range s.Services {
-			wg.Add(1)
-			go func(service Service) {
-				defer wg.Done()
-				for !service.CanRun() {
-					// Wait until the service can run
-					// You might want to add a sleep here to avoid busy waiting
-					time.Sleep(time.Second)
+		for {
+			allInitialized := true
+			for _, service := range s.Services {
+				if !service.isInitialized && service.CanRun() {
+					allInitialized = false
+					service.initialize()
 				}
-				if !service.isInitialized {
-					fmt.Printf("Initializing %s service\n", service.Name)
-					err := service.initialize(s)
-					if err != nil {
-						errChan <- err
-						return
-					}
-					mu.Lock()
-					service.isInitialized = true
-					fmt.Printf("Service %s initialized\n", service.Name)
-					mu.Unlock()
+
+				fmt.Printf("Service: %s, IsInit: %t, CanRun %t\n", service.Name, service.isInitialized, service.CanRun())
+
+				for _, dep := range service.Dependencies {
+					fmt.Printf("Dependency: %s, IsInit: %t\n", dep.Name, dep.isInitialized)
 				}
-			}(service)
-		}
-
-		wg.Wait()
-		close(errChan)
-
-		for err := range errChan {
-			if err != nil {
-				return err
 			}
-		}
-
-		fmt.Println("Services status:")
-		for _, service := range s.Services {
-			status := "not initialized"
-			if service.isInitialized {
-				status = "initialized"
+			if allInitialized {
+				break
 			}
-			fmt.Printf("Service: %s, Status: %s\n", service.Name, status)
+			time.Sleep(5 * time.Second)
 		}
 
 	}

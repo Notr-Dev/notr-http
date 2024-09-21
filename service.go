@@ -1,11 +1,13 @@
 package notrhttp
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Service struct {
 	Name          string
 	isInitialized bool
-	initFunction  func(service *Service, server *Server) error
+	initFunction  func(service *Service) error
 
 	Dependencies []*Service
 }
@@ -14,7 +16,7 @@ func NewService(opts ...func(*Service)) *Service {
 	service := &Service{
 		Name:          "Unnamed Service",
 		isInitialized: false,
-		initFunction:  func(service *Service, server *Server) error { return nil },
+		initFunction:  func(service *Service) error { return nil },
 		Dependencies:  []*Service{},
 	}
 	for _, opt := range opts {
@@ -29,7 +31,7 @@ func WithServiceName(name string) func(*Service) {
 	}
 }
 
-func WithServiceInitFunction(initFunction func(service *Service, server *Server) error) func(*Service) {
+func WithServiceInitFunction(initFunction func(service *Service) error) func(*Service) {
 	return func(s *Service) {
 		s.initFunction = initFunction
 	}
@@ -49,11 +51,11 @@ func WithServiceDependencies(dependencies ...*Service) func(*Service) {
 	}
 }
 
-func (s *Service) initialize(server *Server) error {
+func (s *Service) initialize() error {
 	if s.isInitialized {
 		return fmt.Errorf("Service %s is already initialized", s.Name)
 	}
-	err := s.initFunction(s, server)
+	err := s.initFunction(s)
 	if err != nil {
 		return err
 	}

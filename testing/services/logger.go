@@ -1,25 +1,27 @@
 package services
 
 import (
-	"dev/globals"
+	"database/sql"
 	"fmt"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
 )
 
-var LoggerService = notrhttp.NewService(
-	notrhttp.WithServiceName("Logger Service"),
-	notrhttp.WithServiceInitFunction(func(service *notrhttp.Service, server *notrhttp.Server) error {
+func NewLoggerService(dbService *notrhttp.Service, database **sql.DB) *notrhttp.Service {
+	return notrhttp.NewService(
+		notrhttp.WithServiceName("Logger"),
+		notrhttp.WithServiceDependencies(dbService),
+		notrhttp.WithServiceInitFunction(func(service *notrhttp.Service) error {
 
-		fmt.Println("Initializing logger")
+			fmt.Println("Initializing logger")
 
-		_, err := globals.Data.DB.Exec("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, log TEXT)")
+			_, err := (*database).Exec("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, log TEXT)")
 
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return err
+			}
 
-		return nil
-	}),
-	notrhttp.WithServiceDependencies(DBService),
-)
+			return nil
+		}),
+	)
+}
