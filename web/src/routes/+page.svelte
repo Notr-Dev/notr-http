@@ -1,2 +1,11 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script>
+  import { fetchPath } from "$lib"
+</script>
+
+{#await fetchPath("/details")}
+  <p>loading...</p>
+{:then data}
+  {JSON.stringify(data)}
+{:catch error}
+  <p>{error.message}</p>
+{/await}

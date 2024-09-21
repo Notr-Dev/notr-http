@@ -52,8 +52,6 @@ func (s *Server) ServeHttpFileSystem(path string, fs http.FileSystem) {
 			}
 			defer file.Close()
 
-			fmt.Println("Serving file: ", filename)
-
 			mimType := "application/octet-stream"
 			if filepath.Ext(filename) == ".html" {
 				fmt.Printf("Serving html file: %s\n", filename)

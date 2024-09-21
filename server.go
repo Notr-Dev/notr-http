@@ -3,6 +3,7 @@ package notrhttp
 import (
 	"fmt"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/Notr-Dev/notr-http/web"
@@ -64,6 +65,22 @@ func (s *Server) Run() error {
 		rw.RespondWithSuccess(map[string]string{
 			"message": fmt.Sprintf("Welcome to the %s Rest API.", s.Name),
 			"version": s.Version,
+		})
+	})
+
+	s.Get("/dash/details", func(rw Writer, r *Request) {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+		rw.RespondWithSuccess(map[string]interface{}{
+			"name":    s.Name,
+			"version": s.Version,
+			"port":    s.Port,
+			"memory": map[string]interface{}{
+				"alloc":      float64(m.Alloc) / 1024 / 1024,
+				"totalAlloc": float64(m.TotalAlloc) / 1024 / 1024,
+				"sys":        float64(m.Sys) / 1024 / 1024,
+				"numGC":      m.NumGC,
+			},
 		})
 	})
 
