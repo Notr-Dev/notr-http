@@ -11,7 +11,7 @@ import (
 func main() {
 	server := notrhttp.NewServer("8080", "1.0")
 	server.SetName("My Server")
-	server.Post("/log", func(rw notrhttp.Writer, r *notrhttp.Request) {
+	server.Post("/test", func(rw notrhttp.Writer, r *notrhttp.Request) {
 		type Response struct {
 			Password string `json:"password"`
 			Log      string `json:"log"`

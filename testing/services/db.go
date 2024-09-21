@@ -2,11 +2,12 @@ package services
 
 import (
 	"database/sql"
-	"dev/state"
 	"fmt"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
 )
+
+var DB *sql.DB
 
 var DBService = notrhttp.NewService("db", "/db")
 
@@ -23,7 +24,7 @@ func init() {
 			return err
 		}
 
-		state.DB = database
+		DB = database
 
 		return nil
 	})

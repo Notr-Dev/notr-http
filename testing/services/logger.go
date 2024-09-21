@@ -1,7 +1,6 @@
 package services
 
 import (
-	"dev/state"
 	"fmt"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
@@ -15,7 +14,7 @@ func init() {
 
 		fmt.Println("Initializing logger")
 
-		_, err := state.DB.Exec("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, log TEXT)")
+		_, err := DB.Exec("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, log TEXT)")
 
 		if err != nil {
 			return err
