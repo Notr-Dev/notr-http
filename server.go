@@ -2,12 +2,7 @@ package notrhttp
 
 import (
 	"fmt"
-	"io"
-	"mime"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -131,91 +126,4 @@ func (s *Server) Run() error {
 		}
 		http.NotFound(w, r)
 	}))
-}
-func matchPath(path string, pattern string) (is bool, params map[string]string) {
-	fmt.Println("Path: ", path)
-	fmt.Println("Pattern: ", pattern)
-	if path == "" {
-		path = "/"
-	}
-	if path[0] != '/' {
-		path = "/" + path
-	}
-	pathComponents := strings.Split(path, "/")
-	patternComponents := strings.Split(pattern, "/")
-
-	fmt.Println("Path Components: ", pathComponents)
-	fmt.Println("Pattern Components: ", patternComponents)
-
-	if len(pathComponents) != len(patternComponents) {
-		return false, map[string]string{}
-	}
-
-	params = map[string]string{}
-
-	for i, component := range patternComponents {
-		if component != pathComponents[i] && !strings.HasPrefix(component, "{") {
-			return false, map[string]string{}
-		} else {
-			if strings.HasPrefix(component, "{") {
-				params[component[1:len(component)-1]] = pathComponents[i]
-			}
-		}
-	}
-	return true, params
-}
-func (s *Server) genericHandler(method string, path string, handler Handler) {
-	s.Routes = append(s.Routes,
-		Route{
-			Method:  method,
-			Path:    path,
-			Handler: handler,
-		})
-}
-
-func (s *Server) Get(path string, handler Handler) {
-	s.genericHandler(http.MethodGet, path, handler)
-}
-
-func (s *Server) Post(path string, handler Handler) {
-	s.genericHandler(http.MethodPost, path, handler)
-}
-
-func (s *Server) Put(path string, handler Handler) {
-	s.genericHandler(http.MethodPut, path, handler)
-}
-
-func (s *Server) Delete(path string, handler Handler) {
-	s.genericHandler(http.MethodDelete, path, handler)
-}
-
-func (s *Server) Patch(path string, handler Handler) {
-	s.genericHandler(http.MethodPatch, path, handler)
-}
-
-func (s *Server) StaticServe(path string, dir string) {
-	s.Routes = append(s.Routes,
-		Route{
-			Method: http.MethodGet,
-			Path:   path + "/{filename}",
-			Handler: func(rw Writer, r *Request) {
-				filename := r.Params["filename"]
-				filePath := filepath.Join(dir, filename)
-				fmt.Println("Serving file: ", filePath)
-
-				file, err := os.Open(filePath)
-				if err != nil {
-					http.Error(rw, "File not found", http.StatusNotFound)
-					return
-				}
-				defer file.Close()
-
-				rw.Header().Set("Content-Type", mime.TypeByExtension(filepath.Ext(filePath)))
-
-				if _, err := io.Copy(rw, file); err != nil {
-					http.Error(rw, "Error serving file", http.StatusInternalServerError)
-				}
-			},
-		},
-	)
 }

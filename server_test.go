@@ -7,10 +7,10 @@ import (
 )
 
 // Helper function to initialize a new server
-func setupServer() *Server {
+func setupServer(port string) *Server {
 	server := NewServer(Server{
 		Name:    "Test Server",
-		Port:    ":8080",
+		Port:    port,
 		Version: "1.0.0",
 	})
 
@@ -53,10 +53,10 @@ func checkGetRequest(t *testing.T, url string, expectedStatus int) {
 
 // Test NewServer initializes correctly
 func TestNewServer(t *testing.T) {
-	server := setupServer()
+	server := setupServer(":0001")
 
-	if server.Port != ":8080" {
-		t.Errorf("Expected port ':8080', got '%s'", server.Port)
+	if server.Port != ":0001" {
+		t.Errorf("Expected port ':0001', got '%s'", server.Port)
 	}
 
 	if server.Version != "1.0.0" {
@@ -70,7 +70,7 @@ func TestNewServer(t *testing.T) {
 
 // Test setting server name
 func TestSetName(t *testing.T) {
-	server := setupServer()
+	server := setupServer(":0002")
 
 	if server.Name != "Test Server" {
 		t.Errorf("Expected name 'Test Server', got '%s'", server.Name)
@@ -79,7 +79,7 @@ func TestSetName(t *testing.T) {
 
 // Test adding a GET route
 func TestGetRoute(t *testing.T) {
-	server := setupServer()
+	server := setupServer(":0003")
 
 	server.Get("/test", func(rw Writer, r *Request) {
 		rw.RespondWithSuccess(map[string]string{"message": "Hello, world!"})
@@ -101,7 +101,7 @@ func TestGetRoute(t *testing.T) {
 
 // Test fetching home route
 func TestGetHomeRoute(t *testing.T) {
-	server := setupServer()
+	server := setupServer(":0004")
 
 	server.Get("/", func(rw Writer, r *Request) {
 		rw.RespondWithSuccess(map[string]string{"message": "Hello, world!"})
@@ -112,14 +112,14 @@ func TestGetHomeRoute(t *testing.T) {
 
 	time.Sleep(1000 * time.Millisecond)
 
-	checkGetRequest(t, "http://localhost:8080/", http.StatusOK)
+	checkGetRequest(t, "http://localhost:0004/", http.StatusOK)
 
 	close(stopChan)
 }
 
 // Test fetching a non-existent route
 func TestGetRouteNotFound(t *testing.T) {
-	server := setupServer()
+	server := setupServer(":0005")
 
 	server.Get("/test", func(rw Writer, r *Request) {
 		rw.RespondWithSuccess(map[string]string{"message": "Hello, world!"})
@@ -130,7 +130,7 @@ func TestGetRouteNotFound(t *testing.T) {
 
 	time.Sleep(1000 * time.Millisecond)
 
-	checkGetRequest(t, "http://localhost:8080/nonexistent", http.StatusNotFound)
+	checkGetRequest(t, "http://localhost:0005/nonexistent", http.StatusNotFound)
 
 	close(stopChan)
 }
