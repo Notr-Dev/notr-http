@@ -11,61 +11,40 @@ type Server struct {
 	Port    string
 	Version string
 
-	Routes   []Route
-	Services []*Service
+	routes   []Route
+	services []*Service
 }
 
-func NewServer(options ...func(*Server)) *Server {
-	svr := &Server{
-		Name:    "Unnamed Server",
-		Port:    ":8080",
-		Version: "1.0.0",
-
-		Routes:   []Route{},
-		Services: []*Service{},
+func NewServer(server Server) *Server {
+	if server.Name == "" {
+		server.Name = "Unnamed Server"
 	}
-	for _, o := range options {
-		o(svr)
+	if server.Port == "" {
+		panic("Port is required")
 	}
-	return svr
-}
-
-func WithServerPort(port string) func(*Server) {
-	if port[0] != ':' {
-		port = ":" + port
+	if server.Version == "" {
+		panic("Version is required")
 	}
-	return func(s *Server) {
-		s.Port = port
-	}
-}
-
-func WithServerName(name string) func(*Server) {
-	return func(s *Server) {
-		s.Name = name
-	}
-}
-
-func WithServerVersion(version string) func(*Server) {
-	return func(s *Server) {
-		s.Version = version
-	}
+	server.routes = []Route{}
+	server.services = []*Service{}
+	return &server
 }
 
 func (s *Server) RegisterService(service *Service) {
-	s.Services = append(s.Services, service)
+	s.services = append(s.services, service)
 }
 
 func (s *Server) Run() error {
 
-	if len(s.Services) == 0 {
+	if len(s.services) == 0 {
 		fmt.Println("No services to start")
 	} else {
 
-		fmt.Printf("Starting %d services\n", len(s.Services))
+		fmt.Printf("Starting %d services\n", len(s.services))
 
 		for {
 			allInitialized := true
-			for _, service := range s.Services {
+			for _, service := range s.services {
 				if !service.isInitialized && service.CanRun() {
 					allInitialized = false
 					err := service.initialize()
@@ -88,9 +67,9 @@ func (s *Server) Run() error {
 
 	}
 
-	for _, service := range s.Services {
+	for _, service := range s.services {
 		for _, route := range service.Routes {
-			s.Routes = append(s.Routes, route)
+			s.routes = append(s.routes, route)
 		}
 	}
 
@@ -103,7 +82,7 @@ func (s *Server) Run() error {
 	})
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wasRightPath := false
-		for _, route := range s.Routes {
+		for _, route := range s.routes {
 			if r.URL.Path == route.Path {
 				wasRightPath = true
 				if r.Method == route.Method {
@@ -122,7 +101,7 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) genericHandler(method string, path string, handler Handler) {
-	s.Routes = append(s.Routes,
+	s.routes = append(s.routes,
 		Route{
 			Method:  method,
 			Path:    path,

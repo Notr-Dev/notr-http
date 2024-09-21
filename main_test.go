@@ -9,9 +9,11 @@ import (
 // Test NewServer initializes correctly
 func TestNewServer(t *testing.T) {
 	server := NewServer(
-		WithServerName("Test Server"),
-		WithServerPort(":8080"),
-		WithServerVersion("1.0.0"),
+		Server{
+			Name:    "Test Server",
+			Port:    ":8080",
+			Version: "1.0.0",
+		},
 	)
 
 	if server.Port != ":8080" {
@@ -22,17 +24,19 @@ func TestNewServer(t *testing.T) {
 		t.Errorf("Expected version '1.0.0', got '%s'", server.Version)
 	}
 
-	if len(server.Routes) != 0 {
-		t.Errorf("Expected no routes, got '%d'", len(server.Routes))
+	if len(server.routes) != 0 {
+		t.Errorf("Expected no routes, got '%d'", len(server.routes))
 	}
 }
 
 // Test setting server name
 func TestSetName(t *testing.T) {
 	server := NewServer(
-		WithServerName("Test Server"),
-		WithServerPort(":8080"),
-		WithServerVersion("1.0.0"),
+		Server{
+			Name:    "Test Server",
+			Port:    ":8080",
+			Version: "1.0.0",
+		},
 	)
 
 	if server.Name != "Test Server" {
@@ -43,20 +47,22 @@ func TestSetName(t *testing.T) {
 // Test adding a GET route
 func TestGetRoute(t *testing.T) {
 	server := NewServer(
-		WithServerName("Test Server"),
-		WithServerPort(":8080"),
-		WithServerVersion("1.0.0"),
+		Server{
+			Name:    "Test Server",
+			Port:    ":8080",
+			Version: "1.0.0",
+		},
 	)
 
 	server.Get("/test", func(rw Writer, r *Request) {
 		rw.RespondWithSuccess(map[string]string{"message": "Hello, world!"})
 	})
 
-	if len(server.Routes) != 1 {
-		t.Errorf("Expected 1 route, got '%d'", len(server.Routes))
+	if len(server.routes) != 1 {
+		t.Errorf("Expected 1 route, got '%d'", len(server.routes))
 	}
 
-	route := server.Routes[0]
+	route := server.routes[0]
 	if route.Path != "/test" {
 		t.Errorf("Expected path '/test', got '%s'", route.Path)
 	}
@@ -69,9 +75,11 @@ func TestGetRoute(t *testing.T) {
 // Test fetching home route
 func TestGetHomeRoute(t *testing.T) {
 	server := NewServer(
-		WithServerName("Test Server"),
-		WithServerPort(":8080"),
-		WithServerVersion("1.0.0"),
+		Server{
+			Name:    "Test Server",
+			Port:    ":8080",
+			Version: "1.0.0",
+		},
 	)
 
 	server.Get("/", func(rw Writer, r *Request) {
@@ -116,9 +124,11 @@ func TestGetHomeRoute(t *testing.T) {
 // Test fetching a non-existent route
 func TestGetRouteNotFound(t *testing.T) {
 	server := NewServer(
-		WithServerName("Test Server"),
-		WithServerPort(":8080"),
-		WithServerVersion("1.0.0"),
+		Server{
+			Name:    "Test Server",
+			Port:    ":8080",
+			Version: "1.0.0",
+		},
 	)
 
 	server.Get("/test", func(rw Writer, r *Request) {

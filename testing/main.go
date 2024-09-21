@@ -12,9 +12,11 @@ import (
 
 func main() {
 	server := notrhttp.NewServer(
-		notrhttp.WithServerName("Test Server"),
-		notrhttp.WithServerPort(":8080"),
-		notrhttp.WithServerVersion("1.0.0"),
+		notrhttp.Server{
+			Name:    "Test Server",
+			Port:    ":8080",
+			Version: "1.0.0",
+		},
 	)
 	server.Post("/test", func(rw notrhttp.Writer, r *notrhttp.Request) {
 		type Response struct {

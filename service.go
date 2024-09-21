@@ -8,68 +8,52 @@ type Service struct {
 	Name          string
 	Path          string
 	isInitialized bool
-	initFunction  func(service *Service) error
+	InitFunction  func(service *Service) error
 
 	Routes       []Route
 	Dependencies []*Service
 }
 
-func NewService(opts ...func(*Service)) *Service {
-	service := &Service{
-		Name:          "Unnamed Service",
-		isInitialized: false,
-		initFunction:  func(service *Service) error { return nil },
-		Dependencies:  []*Service{},
+func NewService(service Service) *Service {
+	if service.Name == "" {
+		service.Name = "Unnamed Service"
 	}
-	for _, opt := range opts {
-		opt(service)
+	if service.Path == "" {
+		panic("Path is required")
 	}
-	return service
-}
+	if service.Path[0] != '/' {
+		panic("Path must start with a '/'")
+	}
+	service.isInitialized = false
+	if service.InitFunction == nil {
+		service.InitFunction = func(service *Service) error { return nil }
+	}
+	if service.Dependencies == nil {
+		service.Dependencies = []*Service{}
+	}
 
-func WithServiceName(name string) func(*Service) {
-	return func(s *Service) {
-		s.Name = name
-	}
-}
-
-func WithServiceInitFunction(initFunction func(service *Service) error) func(*Service) {
-	return func(s *Service) {
-		s.initFunction = initFunction
-	}
-}
-
-func WithServiceDependencies(dependencies ...*Service) func(*Service) {
-	return func(s *Service) {
-		for _, dep := range dependencies {
-			if dep == s {
-				panic("Service cannot depend on itself")
-			}
+	if len(service.Dependencies) > 0 {
+		for _, dep := range service.Dependencies {
 			if dep == nil {
 				panic("Dependency cannot be nil")
 			}
+			if dep == &service {
+				panic("Service cannot depend on itself")
+			}
 		}
-		s.Dependencies = dependencies
 	}
-}
 
-func WithServiceSubpath(path string) func(*Service) {
-	return func(s *Service) {
-		s.Path = path
+	if service.Routes == nil {
+		service.Routes = []Route{}
 	}
-}
-
-func WithServiceRoutes(routes ...Route) func(*Service) {
-	return func(s *Service) {
-		s.Routes = routes
-	}
+	return &service
 }
 
 func (s *Service) initialize() error {
 	if s.isInitialized {
 		return fmt.Errorf("Service %s is already initialized", s.Name)
 	}
-	err := s.initFunction(s)
+	err := s.InitFunction(s)
 	if err != nil {
 		return err
 	}
