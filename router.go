@@ -1,7 +1,6 @@
 package notrhttp
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -53,8 +52,6 @@ func (s *Server) Patch(path string, handler Handler) {
 }
 
 func matchPath(path string, pattern string) (is bool, params map[string]string) {
-	fmt.Println("Path: ", path)
-	fmt.Println("Pattern: ", pattern)
 	if path == "" {
 		path = "/"
 	}
@@ -64,10 +61,7 @@ func matchPath(path string, pattern string) (is bool, params map[string]string) 
 	pathComponents := strings.Split(path, "/")
 	patternComponents := strings.Split(pattern, "/")
 
-	fmt.Println("Path Components: ", pathComponents)
-	fmt.Println("Pattern Components: ", patternComponents)
-
-	if len(pathComponents) != len(patternComponents) {
+	if len(pathComponents) != len(patternComponents) && !strings.Contains(pattern, "...") {
 		return false, map[string]string{}
 	}
 
@@ -77,10 +71,15 @@ func matchPath(path string, pattern string) (is bool, params map[string]string) 
 		if component != pathComponents[i] && !strings.HasPrefix(component, "{") {
 			return false, map[string]string{}
 		} else {
-			if strings.HasPrefix(component, "{") {
+			if strings.HasPrefix(component, "{") && strings.HasSuffix(component, "}") {
+				if strings.HasSuffix(component, "...}") {
+					params[component[1:len(component)-4]] = strings.Join(pathComponents[i:], "/")
+					break
+				}
 				params[component[1:len(component)-1]] = pathComponents[i]
 			}
 		}
 	}
+
 	return true, params
 }

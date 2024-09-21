@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/Notr-Dev/notr-http/web"
 )
 
 type Job struct {
@@ -65,21 +67,19 @@ func (s *Server) Run() error {
 		})
 	})
 
+	s.ServeHttpFileSystem("/dash", web.BuildHTTPFS())
+
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wasRightPath := false
 		for _, route := range s.Routes {
 			isMatch, params := matchPath(r.URL.Path, route.Path)
 			if isMatch {
-				fmt.Println("Path matched: ", route.Path)
 				wasRightPath = true
 				if r.Method == route.Method {
 					route.Handler(Writer{w, false}, &Request{r, params})
 					return
 				}
-			} else {
-				fmt.Println("Path did not match: ", route.Path)
 			}
-
 		}
 		if wasRightPath {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

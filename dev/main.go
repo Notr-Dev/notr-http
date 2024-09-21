@@ -74,7 +74,7 @@ func main() {
 	server.RegisterService(DBServiceWrapper.Service)
 	server.RegisterService(LoggerService)
 
-	server.StaticServe("/static", "photos")
+	server.ServeStatic("/static", "photos")
 
 	err := server.Run()
 	if err != nil {
