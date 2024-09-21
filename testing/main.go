@@ -37,11 +37,10 @@ func main() {
 		})
 	})
 
-	DBService, getDB := services.NewDBService("test.sqlite")
+	DBServiceWrapper := services.NewDBService("test.sqlite")
+	LoggerService := services.NewLoggerService(DBServiceWrapper)
 
-	var LoggerService = services.NewLoggerService(DBService, getDB)
-
-	server.RegisterService(DBService)
+	server.RegisterService(DBServiceWrapper.Service)
 	server.RegisterService(LoggerService)
 
 	err := server.Run()

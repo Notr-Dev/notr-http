@@ -6,25 +6,39 @@ import (
 	notrhttp "github.com/Notr-Dev/notr-http"
 )
 
-func NewDBService(dbPath string) (*notrhttp.Service, func() *sql.DB) {
-	var database *sql.DB
-	return notrhttp.NewService(
-			notrhttp.WithServiceName("DB"),
-			notrhttp.WithServiceInitFunction(func(service *notrhttp.Service) error {
-				db, err := sql.Open("sqlite3", dbPath)
-				if err != nil {
-					return err
-				}
+type DBService struct {
+	*notrhttp.Service
+	Database *sql.DB
+}
 
-				if err := db.Ping(); err != nil {
-					return err
-				}
+func (d *DBService) GetDB() *sql.DB {
+	if d.Database == nil {
+		panic("Database is not initialized")
+	}
+	return d.Database
+}
 
-				database = db
+func NewDBService(dbPath string) *DBService {
+	wrapper := &DBService{}
+	service := notrhttp.NewService(
+		notrhttp.WithServiceName("DB"),
+		notrhttp.WithServiceInitFunction(func(service *notrhttp.Service) error {
+			db, err := sql.Open("sqlite3", dbPath)
+			if err != nil {
+				return err
+			}
 
-				return nil
-			}),
-		), func() *sql.DB {
-			return database
-		}
+			if err := db.Ping(); err != nil {
+				return err
+			}
+
+			wrapper.Database = db
+
+			return nil
+		}),
+	)
+
+	wrapper.Service = service
+
+	return wrapper
 }
