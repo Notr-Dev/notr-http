@@ -51,7 +51,11 @@ type Request struct {
 type Handler func(rw Writer, r *Request)
 
 func (s *Server) genericHandler(method string, path string, handler Handler) {
-	s.Router.HandleFunc(method+" "+path, func(w http.ResponseWriter, r *http.Request) {
+	s.Router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method {
+			http.NotFound(w, r)
+			return
+		}
 		handler(Writer{w}, &Request{r})
 	})
 }
