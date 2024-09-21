@@ -7,6 +7,7 @@ import (
 
 type Writer struct {
 	http.ResponseWriter
+	HadRespondedEarlier bool
 }
 
 func (r *Request) GetJSONBody(v interface{}) error {
@@ -14,11 +15,15 @@ func (r *Request) GetJSONBody(v interface{}) error {
 }
 
 func (rw *Writer) RespondWithJson(code int, payload interface{}) {
+	if rw.HadRespondedEarlier {
+		panic("Response already sent, should use return after RespondingWithJson")
+	}
 	response, err := json.Marshal(payload)
 	if err != nil {
 		rw.RespondWithInternalError("Error marshalling response")
 		return
 	}
+	rw.HadRespondedEarlier = true
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(code)
 	rw.Write(response)

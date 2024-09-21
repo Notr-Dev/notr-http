@@ -44,7 +44,7 @@ func (s *Server) Run() error {
 			if r.URL.Path == route.Path {
 				wasRightPath = true
 				if r.Method == route.Method {
-					route.Handler(Writer{w}, &Request{r})
+					route.Handler(Writer{w, false}, &Request{r})
 					return
 				}
 			}
