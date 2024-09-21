@@ -22,9 +22,9 @@ type Server struct {
 	Port    string
 	Version string
 
-	routes   []Route
-	services []*Service
-	jobs     []Job
+	Routes   []Route
+	Services []*Service
+	Jobs     []Job
 }
 
 func NewServer(server Server) *Server {
@@ -37,30 +37,30 @@ func NewServer(server Server) *Server {
 	if server.Version == "" {
 		panic("Version is required")
 	}
-	server.routes = []Route{}
-	server.services = []*Service{}
-	server.jobs = []Job{}
+	server.Routes = []Route{}
+	server.Services = []*Service{}
+	server.Jobs = []Job{}
 	return &server
 }
 
 func (s *Server) RegisterService(service *Service) {
-	s.services = append(s.services, service)
+	s.Services = append(s.Services, service)
 }
 func (s *Server) RegisterJob(job Job) {
-	s.jobs = append(s.jobs, job)
+	s.Jobs = append(s.Jobs, job)
 }
 
 func (s *Server) Run() error {
 
-	if len(s.services) == 0 {
+	if len(s.Services) == 0 {
 		fmt.Println("No services to start")
 	} else {
 
-		fmt.Printf("Starting %d services\n", len(s.services))
+		fmt.Printf("Starting %d services\n", len(s.Services))
 
 		for {
 			allInitialized := true
-			for _, service := range s.services {
+			for _, service := range s.Services {
 				if !service.isInitialized && service.CanRun() {
 					allInitialized = false
 					err := service.initialize()
@@ -83,9 +83,9 @@ func (s *Server) Run() error {
 
 	}
 
-	for _, service := range s.services {
+	for _, service := range s.Services {
 		for _, route := range service.Routes {
-			s.routes = append(s.routes, route)
+			s.Routes = append(s.Routes, route)
 		}
 	}
 
@@ -97,7 +97,7 @@ func (s *Server) Run() error {
 		})
 	})
 
-	for _, job := range s.jobs {
+	for _, job := range s.Jobs {
 		go func(job Job) {
 			for {
 				err := job.Job()
@@ -111,7 +111,7 @@ func (s *Server) Run() error {
 
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wasRightPath := false
-		for _, route := range s.routes {
+		for _, route := range s.Routes {
 			isMatch, params := matchPath(r.URL.Path, route.Path)
 			if isMatch {
 				fmt.Println("Path matched: ", route.Path)
@@ -165,7 +165,7 @@ func matchPath(path string, pattern string) (is bool, params map[string]string) 
 	return true, params
 }
 func (s *Server) genericHandler(method string, path string, handler Handler) {
-	s.routes = append(s.routes,
+	s.Routes = append(s.Routes,
 		Route{
 			Method:  method,
 			Path:    path,
@@ -194,7 +194,7 @@ func (s *Server) Patch(path string, handler Handler) {
 }
 
 func (s *Server) StaticServe(path string, dir string) {
-	s.routes = append(s.routes,
+	s.Routes = append(s.Routes,
 		Route{
 			Method: http.MethodGet,
 			Path:   path + "/{filename}",
