@@ -4,19 +4,15 @@ import "fmt"
 
 type Service struct {
 	Name          string
-	Subpath       string
-	isReady       bool
 	isInitialized bool
 	initFunction  func(s *Service) error
 
-	Handlers     []Handler
 	Dependencies []*Service
 }
 
-func NewService(name string, subpath string) *Service {
-	return &Service{
+func NewService(name string) Service {
+	return Service{
 		Name:          name,
-		Subpath:       subpath,
 		isInitialized: false,
 		initFunction:  func(s *Service) error { return nil },
 	}
@@ -47,18 +43,12 @@ func (s *Service) AddDependency(dep *Service) {
 
 func (s *Service) CanRun() bool {
 	if len(s.Dependencies) == 0 {
-		s.isReady = true
-		return s.isReady
+		return true
 	}
 	for _, dep := range s.Dependencies {
-		if dep == s {
-			panic(fmt.Sprintf("Service %s cannot have itself as a dependency", s.Name))
-		}
 		if !dep.isInitialized {
-			s.isReady = false
 			return false
 		}
 	}
-	s.isReady = true
 	return true
 }

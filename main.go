@@ -12,7 +12,7 @@ type Server struct {
 	Name     string
 	Port     string
 	Version  string
-	Services []*Service
+	Services []Service
 }
 
 func NewServer(port string, version string) *Server {
@@ -24,11 +24,11 @@ func NewServer(port string, version string) *Server {
 		Port:     port,
 		Name:     "Unnamed Server",
 		Version:  version,
-		Services: make([]*Service, 0),
+		Services: make([]Service, 0),
 	}
 }
 
-func (s *Server) RegisterService(service *Service) {
+func (s *Server) RegisterService(service Service) {
 	s.Services = append(s.Services, service)
 }
 
@@ -46,7 +46,7 @@ func (s *Server) Run() error {
 
 		for _, service := range s.Services {
 			wg.Add(1)
-			go func(service *Service) {
+			go func(service Service) {
 				defer wg.Done()
 				for !service.CanRun() {
 					// Wait until the service can run
