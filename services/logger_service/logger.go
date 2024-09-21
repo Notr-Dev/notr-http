@@ -2,10 +2,10 @@ package logger_service
 
 import (
 	"database/sql"
-	"dev/services/db_service"
 	"fmt"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
+	"github.com/Notr-Dev/notr-http/services/db_service"
 )
 
 func NewLoggerService(dbService *db_service.DBService) *notrhttp.Service {

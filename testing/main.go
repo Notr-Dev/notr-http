@@ -2,12 +2,12 @@ package main
 
 import (
 	"database/sql"
-	logger_service "dev/services"
-	"dev/services/db_service"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
+	"github.com/Notr-Dev/notr-http/services/db_service"
+	"github.com/Notr-Dev/notr-http/services/logger_service"
 )
 
 func main() {
