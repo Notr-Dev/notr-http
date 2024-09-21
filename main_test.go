@@ -3,6 +3,7 @@ package notrhttp
 import (
 	"net/http"
 	"testing"
+	"time"
 )
 
 // Test NewServer initializes correctly
@@ -53,4 +54,88 @@ func TestGetRoute(t *testing.T) {
 	}
 }
 
+// Test fetching home route
+func TestGetHomeRoute(t *testing.T) {
 
+	server := NewServer("8080", "1.0.0")
+	server.Get("/", func(rw Writer, r *Request) {
+		rw.RespondWithSuccess(map[string]string{"message": "Hello, world!"})
+	})
+
+	stopChan := make(chan struct{})
+	errChan := make(chan error, 1)
+	go func() {
+		select {
+		case <-stopChan:
+			return
+		default:
+			if err := server.Run(); err != nil && err != http.ErrServerClosed {
+				errChan <- err
+			}
+		}
+	}()
+
+	select {
+	case err := <-errChan:
+		t.Fatalf("Failed to start server: %v", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	time.Sleep(1000 * time.Millisecond)
+
+	resp, err := http.Get("http://localhost:8080/")
+	if err != nil {
+		t.Fatalf("Failed to make GET request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status '200 OK', got '%d'", resp.StatusCode)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+	close(stopChan)
+}
+
+// Test fetching a non-existent route
+func TestGetRouteNotFound(t *testing.T) {
+	server := NewServer("8081", "1.0.0")
+	server.Get("/test", func(rw Writer, r *Request) {
+		rw.RespondWithSuccess(map[string]string{"message": "Hello, world!"})
+	})
+
+	stopChan := make(chan struct{})
+	errChan := make(chan error, 1)
+	go func() {
+		select {
+		case <-stopChan:
+			return
+		default:
+			if err := server.Run(); err != nil && err != http.ErrServerClosed {
+				errChan <- err
+			}
+		}
+	}()
+
+	select {
+	case err := <-errChan:
+		t.Fatalf("Failed to start server: %v", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	time.Sleep(1000 * time.Millisecond)
+
+	resp, err := http.Get("http://localhost:8080/nonexistent")
+	if err != nil {
+		t.Fatalf("Failed to make GET request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected status '404 Not Found', got '%d'", resp.StatusCode)
+	}
+
+	time.Sleep(100 * time.Millisecond)
+
+	close(stopChan)
+}
