@@ -37,7 +37,10 @@ func main() {
 		})
 	})
 
-	DBServiceWrapper := services.NewDBService("test.sqlite")
+	DBServiceWrapper := services.NewDBService(services.DBServiceConfig{
+		DBPath:     "test.sqlite",
+		Migrations: make([]services.Migration, 0),
+	})
 	LoggerService := services.NewLoggerService(DBServiceWrapper)
 
 	server.RegisterService(DBServiceWrapper.Service)

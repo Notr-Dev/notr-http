@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
@@ -14,13 +15,18 @@ func NewLoggerService(dbService *DBService) *notrhttp.Service {
 
 			fmt.Println("Initializing logger")
 
-			_, err := dbService.GetDB().Exec("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY, log TEXT)")
-
-			if err != nil {
-				return err
-			}
-
-			return nil
+			return dbService.AddMigrations(
+				Migration{
+					Up: func(db *sql.DB) error {
+						_, err := db.Exec("CREATE TABLE logs (id INTEGER PRIMARY KEY, log TEXT)")
+						return err
+					},
+					Down: func(db *sql.DB) error {
+						_, err := db.Exec("DROP TABLE logs")
+						return err
+					},
+				},
+			)
 		}),
 	)
 }
