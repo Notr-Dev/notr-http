@@ -32,9 +32,6 @@ func (s *Server) Run() error {
 			"version": s.Version,
 		})
 	})
-	s.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r)
-	})
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.Router.ServeHTTP(w, r)
 	}))
