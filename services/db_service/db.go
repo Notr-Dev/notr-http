@@ -50,7 +50,7 @@ func NewDBService(config DBServiceConfig) *DBService {
 		notrhttp.Service{
 			Name: config.Name,
 			Path: config.Subpath,
-			InitFunction: func(service *notrhttp.Service) error {
+			InitFunction: func(service *notrhttp.Service, server *notrhttp.Server) error {
 				db, err := sql.Open("sqlite3", config.DBPath)
 				if err != nil {
 					return err

@@ -3,10 +3,7 @@ package notrhttp
 import (
 	"fmt"
 	"net/http"
-	"runtime"
 	"time"
-
-	"github.com/Notr-Dev/notr-http/web"
 )
 
 type Job struct {
@@ -68,24 +65,6 @@ func (s *Server) Run() error {
 		})
 	})
 
-	s.Get("/dash/details", func(rw Writer, r *Request) {
-		var m runtime.MemStats
-		runtime.ReadMemStats(&m)
-		rw.RespondWithSuccess(map[string]interface{}{
-			"name":    s.Name,
-			"version": s.Version,
-			"port":    s.Port,
-			"memory": map[string]interface{}{
-				"alloc":      float64(m.Alloc) / 1024 / 1024,
-				"totalAlloc": float64(m.TotalAlloc) / 1024 / 1024,
-				"sys":        float64(m.Sys) / 1024 / 1024,
-				"numGC":      m.NumGC,
-			},
-		})
-	})
-
-	s.ServeHttpFileSystem("/dash", web.BuildHTTPFS())
-
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wasRightPath := false
 		for _, route := range s.Routes {
@@ -125,7 +104,7 @@ func setupServices(s *Server) error {
 		for _, service := range s.Services {
 			if !service.isInitialized && service.CanRun() {
 				allInitialized = false
-				err := service.initialize()
+				err := service.initialize(s)
 				if err != nil {
 					return err
 				}

@@ -13,7 +13,7 @@ func NewLoggerService(dbService *db_service.DBService) *notrhttp.Service {
 		notrhttp.Service{
 			Name:         "Logger",
 			Dependencies: []*notrhttp.Service{dbService.Service},
-			InitFunction: func(service *notrhttp.Service) error {
+			InitFunction: func(service *notrhttp.Service, server *notrhttp.Server) error {
 				fmt.Println("Initializing logger")
 
 				return dbService.AddMigrations(

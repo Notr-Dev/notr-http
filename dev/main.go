@@ -8,6 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
+	"github.com/Notr-Dev/notr-http/services/dash_service"
 	"github.com/Notr-Dev/notr-http/services/db_service"
 	"github.com/Notr-Dev/notr-http/services/logger_service"
 )
@@ -62,6 +63,11 @@ func main() {
 	})
 	LoggerService := logger_service.NewLoggerService(DBServiceWrapper)
 
+	DashService := dash_service.NewDashService(dash_service.DashServiceConfig{
+		Name:    "Dash Service",
+		Subpath: "/dash",
+	})
+
 	server.RegisterJob(notrhttp.Job{
 		Name:     "Test Job",
 		Interval: 5 * time.Second,
@@ -73,6 +79,7 @@ func main() {
 
 	server.RegisterService(DBServiceWrapper.Service)
 	server.RegisterService(LoggerService)
+	server.RegisterService(DashService.Service)
 
 	server.ServeStatic("/static", "photos")
 

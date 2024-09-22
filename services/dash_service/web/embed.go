@@ -1,4 +1,4 @@
-package web
+package dash_service_ui
 
 import (
 	"embed"

@@ -8,7 +8,7 @@ type Service struct {
 	Name          string
 	Path          string
 	isInitialized bool
-	InitFunction  func(service *Service) error
+	InitFunction  func(service *Service, server *Server) error
 
 	Routes       []Route
 	Dependencies []*Service
@@ -29,7 +29,7 @@ func NewService(service Service) *Service {
 
 	service.isInitialized = false
 	if service.InitFunction == nil {
-		service.InitFunction = func(service *Service) error { return nil }
+		service.InitFunction = func(service *Service, server *Server) error { return nil }
 	}
 	if service.Dependencies == nil {
 		service.Dependencies = []*Service{}
@@ -52,11 +52,11 @@ func NewService(service Service) *Service {
 	return &service
 }
 
-func (s *Service) initialize() error {
+func (s *Service) initialize(server *Server) error {
 	if s.isInitialized {
 		return fmt.Errorf("Service %s is already initialized", s.Name)
 	}
-	err := s.InitFunction(s)
+	err := s.InitFunction(s, server)
 	if err != nil {
 		return err
 	}
