@@ -8,6 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
+	"github.com/Notr-Dev/notr-http/services/auth_service"
 	"github.com/Notr-Dev/notr-http/services/dash_service"
 	"github.com/Notr-Dev/notr-http/services/db_service"
 	"github.com/Notr-Dev/notr-http/services/logger_service"
@@ -61,6 +62,12 @@ func main() {
 		Name:       "DB Service",
 		Subpath:    "/db",
 	})
+	AuthService := auth_service.NewAuthService(auth_service.AuthServiceConfig{
+		Name:    "Auth Service",
+		Subpath: "/auth",
+	},
+		DBServiceWrapper,
+	)
 	LoggerService := logger_service.NewLoggerService(DBServiceWrapper)
 
 	DashService := dash_service.NewDashService(dash_service.DashServiceConfig{
@@ -78,6 +85,7 @@ func main() {
 	})
 
 	server.RegisterService(DBServiceWrapper.Service)
+	server.RegisterService(AuthService)
 	server.RegisterService(LoggerService)
 	server.RegisterService(DashService.Service)
 

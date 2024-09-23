@@ -14,12 +14,12 @@ type AuthServiceConfig struct {
 
 type AuthService struct {
 	*notrhttp.Service
-	Database *sql.DB
+	DBService *db_service.DBService
 }
 
 func NewAuthService(config AuthServiceConfig, dbService *db_service.DBService) *notrhttp.Service {
 	wrapper := &AuthService{}
-	wrapper.Database = dbService.GetDB()
+	wrapper.DBService = dbService
 	return notrhttp.NewService(
 		notrhttp.Service{
 			PackageID:    "auth",
@@ -36,7 +36,8 @@ func NewAuthService(config AuthServiceConfig, dbService *db_service.DBService) *
 									id BLOB PRIMARY KEY,
 									created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 									email TEXT NOT NULL,
-									password TEXT NOT NULL
+									password TEXT NOT NULL,
+									role TEXT NOT NULL
 								)
 							`)
 							return err
