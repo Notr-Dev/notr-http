@@ -29,6 +29,7 @@ func NewAuthService(config AuthServiceConfig, dbService *db_service.DBService) *
 			InitFunction: func(service *notrhttp.Service, server *notrhttp.Server) error {
 				err := dbService.AddMigrations(
 					db_service.Migration{
+						ID: "auth-users",
 						Up: func(db *sql.DB) error {
 							_, err := db.Exec(`
 								CREATE TABLE users (

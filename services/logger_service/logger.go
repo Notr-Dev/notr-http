@@ -19,6 +19,7 @@ func NewLoggerService(dbService *db_service.DBService) *notrhttp.Service {
 
 				return dbService.AddMigrations(
 					db_service.Migration{
+						ID: "logger-logs",
 						Up: func(db *sql.DB) error {
 							_, err := db.Exec("CREATE TABLE logs (id INTEGER PRIMARY KEY, log TEXT)")
 							return err

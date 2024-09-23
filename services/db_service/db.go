@@ -16,7 +16,7 @@ type DBServiceConfig struct {
 type DBService struct {
 	*notrhttp.Service
 	Database   *sql.DB
-	Migrations []versionedMigration
+	Migrations []Migration
 }
 
 func (d *DBService) GetDB() *sql.DB {
@@ -36,7 +36,7 @@ func NewDBService(config DBServiceConfig) *DBService {
 	}
 
 	wrapper := &DBService{}
-	wrapper.Migrations = make([]versionedMigration, 0)
+	wrapper.Migrations = make([]Migration, 0)
 	service := notrhttp.NewService(
 		notrhttp.Service{
 			PackageID: "db",
