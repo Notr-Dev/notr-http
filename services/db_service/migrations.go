@@ -3,6 +3,7 @@ package db_service
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 type Migration struct {
@@ -41,6 +42,9 @@ func (d *DBService) AddMigrations(migrations ...Migration) error {
 		for _, existingMig := range d.Migrations {
 			if existingMig.ID == mig.ID {
 				return fmt.Errorf("Migration with ID %s already exists", mig.ID)
+			}
+			if mig.ID == "" {
+				return fmt.Errorf("Migration ID cannot be empty")
 			}
 		}
 	}
@@ -87,6 +91,16 @@ func checkIfMigrationWasApplied(db *sql.DB, id string) (bool, error) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
+		}
+		if strings.Contains(err.Error(), "no such table") {
+
+			err = initialMigration.Up(db)
+
+			if err != nil {
+				return false, err
+			}
+
+			return checkIfMigrationWasApplied(db, id)
 		}
 		return false, err
 	}

@@ -53,10 +53,7 @@ func NewDBService(config DBServiceConfig) *DBService {
 				}
 
 				wrapper.Database = db
-				err = wrapper.AddMigrations(initialMigration)
-				if err != nil {
-					return err
-				}
+
 				err = wrapper.AddMigrations(config.Migrations...)
 
 				return err
