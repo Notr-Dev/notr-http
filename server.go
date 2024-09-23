@@ -66,10 +66,14 @@ func (s *Server) Run() error {
 	})
 
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// TO DO: cors
+		w.Header().Add("Access-Control-Allow-Origin", "*")
 		wasRightPath := false
 		for _, route := range s.Routes {
 			isMatch, params := matchPath(r.URL.Path, route.Path)
 			if isMatch {
+				fmt.Println("Matched %s with %s", r.URL.Path, route.Path)
+				fmt.Println(params)
 				wasRightPath = true
 				if r.Method == route.Method {
 					route.Handler(Writer{w, false}, &Request{r, params})
@@ -102,7 +106,7 @@ func setupServices(s *Server) error {
 	for {
 		allInitialized := true
 		for _, service := range s.Services {
-			if !service.isInitialized && service.CanRun() {
+			if !service.IsInitialized && service.CanRun() {
 				allInitialized = false
 				err := service.initialize(s)
 				if err != nil {
@@ -110,10 +114,10 @@ func setupServices(s *Server) error {
 				}
 			}
 
-			fmt.Printf("Service: %s, IsInit: %t, CanRun %t\n", service.Name, service.isInitialized, service.CanRun())
+			fmt.Printf("Service: %s, IsInit: %t, CanRun %t\n", service.Name, service.IsInitialized, service.CanRun())
 
 			for _, dep := range service.Dependencies {
-				fmt.Printf("Dependency: %s, IsInit: %t\n", dep.Name, dep.isInitialized)
+				fmt.Printf("Dependency: %s, IsInit: %t\n", dep.Name, dep.IsInitialized)
 			}
 		}
 		if allInitialized {

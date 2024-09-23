@@ -6,9 +6,9 @@ import (
 )
 
 type Route struct {
-	Method  string
-	Path    string
-	Handler Handler
+	Method  string  `json:"method"`
+	Path    string  `json:"path"`
+	Handler Handler `json:"-"`
 }
 
 type Router struct {

@@ -62,6 +62,37 @@ func NewDashService(config DashServiceConfig) *DashService {
 				},
 				{
 					Method: "GET",
+					Path:   "/services",
+					Handler: func(rw notrhttp.Writer, r *notrhttp.Request) {
+						type ServiceAnswer struct {
+							PackageID     string           `json:"package_id"`
+							Name          string           `json:"name"`
+							Path          string           `json:"path"`
+							IsInitialized bool             `json:"is_initialized"`
+							Routes        []notrhttp.Route `json:"routes"`
+							Dependencies  []string         `json:"dependencies"`
+						}
+						services := []ServiceAnswer{}
+						for _, service := range wrapper.server.Services {
+							deps := make([]string, 0)
+							for _, dep := range service.Dependencies {
+								deps = append(deps, dep.PackageID)
+							}
+							services = append(services, ServiceAnswer{
+								PackageID:     service.PackageID,
+								Name:          service.Name,
+								Path:          service.Path,
+								IsInitialized: service.IsInitialized,
+								Routes:        service.Routes,
+								Dependencies:  deps,
+							})
+
+						}
+						rw.RespondWithSuccess(services)
+					},
+				},
+				{
+					Method: "GET",
 					Path:   "/{filename...}",
 					Handler: func(rw notrhttp.Writer, r *notrhttp.Request) {
 						filename := r.Params["filename"]

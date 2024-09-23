@@ -15,7 +15,7 @@ func (rw *Writer) RespondWithJson(code int, payload interface{}) {
 	}
 	response, err := json.Marshal(payload)
 	if err != nil {
-		rw.RespondWithInternalError("Error marshalling response")
+		rw.RespondWithInternalError("Error marshalling response: " + err.Error())
 		return
 	}
 	rw.HadRespondedEarlier = true

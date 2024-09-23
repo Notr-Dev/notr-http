@@ -2,17 +2,18 @@ package notrhttp
 
 import (
 	"fmt"
+	"regexp"
 )
 
 type Service struct {
-	PackageID     string
-	Name          string
-	Path          string
-	isInitialized bool
-	InitFunction  func(service *Service, server *Server) error
+	PackageID     string                                       `json:"package_id"`
+	Name          string                                       `json:"name"`
+	Path          string                                       `json:"path"`
+	IsInitialized bool                                         `json:"is_initialized"`
+	InitFunction  func(service *Service, server *Server) error `json:"-"`
 
-	Routes       []Route
-	Dependencies []*Service
+	Routes       []Route    `json:"routes"`
+	Dependencies []*Service `json:"dependencies"`
 }
 
 func NewService(service Service) *Service {
@@ -21,6 +22,9 @@ func NewService(service Service) *Service {
 	}
 	if service.PackageID == "" {
 		panic("Service must have a valid ID.")
+	}
+	if regexp.MustCompile(`\s`).MatchString(service.PackageID) {
+		panic("Service ID cannot contain spaces.")
 	}
 	if len(service.Routes) > 0 {
 		if service.Path == "" {
@@ -31,7 +35,7 @@ func NewService(service Service) *Service {
 		}
 	}
 
-	service.isInitialized = false
+	service.IsInitialized = false
 	if service.InitFunction == nil {
 		service.InitFunction = func(service *Service, server *Server) error { return nil }
 	}
@@ -57,7 +61,7 @@ func NewService(service Service) *Service {
 }
 
 func (s *Service) initialize(server *Server) error {
-	if s.isInitialized {
+	if s.IsInitialized {
 		return fmt.Errorf("Service %s is already initialized", s.Name)
 	}
 	err := s.InitFunction(s, server)
@@ -79,7 +83,7 @@ func (s *Service) initialize(server *Server) error {
 		}
 	}
 
-	s.isInitialized = true
+	s.IsInitialized = true
 	return nil
 }
 
@@ -88,7 +92,7 @@ func (s *Service) CanRun() bool {
 		return true
 	}
 	for _, dep := range s.Dependencies {
-		if !dep.isInitialized {
+		if !dep.IsInitialized {
 			return false
 		}
 	}
