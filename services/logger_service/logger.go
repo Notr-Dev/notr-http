@@ -11,6 +11,7 @@ import (
 func NewLoggerService(dbService *db_service.DBService) *notrhttp.Service {
 	return notrhttp.NewService(
 		notrhttp.Service{
+			PackageID:    "logger",
 			Name:         "Logger",
 			Dependencies: []*notrhttp.Service{dbService.Service},
 			InitFunction: func(service *notrhttp.Service, server *notrhttp.Server) error {

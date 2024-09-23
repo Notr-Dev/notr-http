@@ -32,8 +32,9 @@ func NewDashService(config DashServiceConfig) *DashService {
 	wrapper := &DashService{}
 	service := notrhttp.NewService(
 		notrhttp.Service{
-			Name: config.Name,
-			Path: config.Subpath,
+			PackageID: "dash",
+			Name:      config.Name,
+			Path:      config.Subpath,
 			InitFunction: func(service *notrhttp.Service, server *notrhttp.Server) error {
 				wrapper.server = server
 

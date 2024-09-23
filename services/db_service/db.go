@@ -27,15 +27,6 @@ func (d *DBService) GetDB() *sql.DB {
 }
 
 func NewDBService(config DBServiceConfig) *DBService {
-
-	if config.Name == "" {
-		config.Name = "Unnamed DB Service"
-	}
-
-	if config.Subpath == "" {
-		panic("Subpath is required")
-	}
-
 	if config.DBPath == "" {
 		panic("DBPath is required")
 	}
@@ -48,8 +39,9 @@ func NewDBService(config DBServiceConfig) *DBService {
 	wrapper.Migrations = make([]versionedMigration, 0)
 	service := notrhttp.NewService(
 		notrhttp.Service{
-			Name: config.Name,
-			Path: config.Subpath,
+			PackageID: "db",
+			Name:      config.Name,
+			Path:      config.Subpath,
 			InitFunction: func(service *notrhttp.Service, server *notrhttp.Server) error {
 				db, err := sql.Open("sqlite3", config.DBPath)
 				if err != nil {

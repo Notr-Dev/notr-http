@@ -5,6 +5,7 @@ import (
 )
 
 type Service struct {
+	PackageID     string
 	Name          string
 	Path          string
 	isInitialized bool
@@ -17,6 +18,9 @@ type Service struct {
 func NewService(service Service) *Service {
 	if service.Name == "" {
 		service.Name = "Unnamed Service"
+	}
+	if service.PackageID == "" {
+		panic("Service must have a valid ID.")
 	}
 	if len(service.Routes) > 0 {
 		if service.Path == "" {

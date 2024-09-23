@@ -70,7 +70,7 @@ func main() {
 
 	server.RegisterJob(notrhttp.Job{
 		Name:     "Test Job",
-		Interval: 5 * time.Second,
+		Interval: 5 * time.Minute,
 		Job: func() error {
 			fmt.Println("Test Job")
 			return nil
