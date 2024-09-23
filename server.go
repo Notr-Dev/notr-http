@@ -17,9 +17,10 @@ type Server struct {
 	Port    string
 	Version string
 
-	Routes   []Route
-	Services []*Service
-	Jobs     []Job
+	Middlewares []*Middleware
+	Routes      []Route
+	Services    []*Service
+	Jobs        []Job
 }
 
 func NewServer(server Server) *Server {
@@ -35,6 +36,7 @@ func NewServer(server Server) *Server {
 	server.Routes = []Route{}
 	server.Services = []*Service{}
 	server.Jobs = []Job{}
+	server.Middlewares = []*Middleware{}
 	return &server
 }
 
@@ -43,6 +45,9 @@ func (s *Server) RegisterService(service *Service) {
 }
 func (s *Server) RegisterJob(job Job) {
 	s.Jobs = append(s.Jobs, job)
+}
+func (s *Server) RegisterMiddleware(middleware Middleware) {
+	s.Middlewares = append(s.Middlewares, &middleware)
 }
 
 func (s *Server) Run() error {
@@ -66,16 +71,15 @@ func (s *Server) Run() error {
 	})
 
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TO DO: cors
-		w.Header().Add("Access-Control-Allow-Origin", "*")
 		wasRightPath := false
 		for _, route := range s.Routes {
 			isMatch, params := matchPath(r.URL.Path, route.Path)
 			if isMatch {
-				fmt.Println("Matched %s with %s", r.URL.Path, route.Path)
+				fmt.Printf("Matched %s with %s\n", r.URL.Path, route.Path)
 				fmt.Println(params)
 				wasRightPath = true
 				if r.Method == route.Method {
+					// TO DO: fix middlewares
 					route.Handler(Writer{w, false}, &Request{r, params})
 					return
 				}
@@ -91,7 +95,17 @@ func (s *Server) Run() error {
 
 func appendRoutes(s *Server) {
 	for _, service := range s.Services {
+		for _, route := range service.Routes {
+			route.Middlewares = append(s.Middlewares, route.Middlewares...)
+			route.Middlewares = append(service.Middlewares, route.Middlewares...)
+		}
 		s.Routes = append(s.Routes, service.Routes...)
+	}
+
+	for _, route := range s.Routes {
+		for _, middleware := range s.Middlewares {
+			route.Handler = (*middleware)(route.Handler)
+		}
 	}
 }
 

@@ -6,9 +6,10 @@ import (
 )
 
 type Route struct {
-	Method  string  `json:"method"`
-	Path    string  `json:"path"`
-	Handler Handler `json:"-"`
+	Method      string        `json:"method"`
+	Path        string        `json:"path"`
+	Handler     Handler       `json:"-"`
+	Middlewares []*Middleware `json:"-"`
 }
 
 type Router struct {
@@ -16,6 +17,8 @@ type Router struct {
 }
 
 type Handler func(rw Writer, r *Request)
+
+type Middleware func(next Handler) Handler
 
 type Request struct {
 	*http.Request

@@ -91,6 +91,15 @@ func main() {
 
 	server.ServeStatic("/static", "photos")
 
+	var cors notrhttp.Middleware = func(next notrhttp.Handler) notrhttp.Handler {
+		return func(rw notrhttp.Writer, r *notrhttp.Request) {
+			fmt.Println("Middleware")
+			next(rw, r)
+		}
+	}
+
+	server.RegisterMiddleware(cors)
+
 	err := server.Run()
 	if err != nil {
 		panic(err)

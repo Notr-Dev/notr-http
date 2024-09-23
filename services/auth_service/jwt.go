@@ -17,11 +17,35 @@ type JWTClaims struct {
 }
 
 func (c *JWTClaims) Valid() error {
-	vErr := new(jwt.ValidationError)
+	if c.ExpiresAt < time.Now().Unix() {
+		return fmt.Errorf("token is expired")
+	}
+	return nil
+}
 
+func IsValidRole(role string, config JWTConfig) bool {
+	for _, r := range config.Roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+
+func IsValidType(tokenType string, config JWTConfig) bool {
+	for _, t := range config.Types {
+		if t == tokenType {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *JWTClaims) ValidateWithConfig(config JWTConfig) error {
+	vErr := new(jwt.ValidationError)
 	now := time.Now().Unix()
 
-	if c.Issuer != config.JWTIssuer {
+	if c.Issuer != config.Issuer {
 		vErr.Inner = fmt.Errorf("invalid issuer")
 		vErr.Errors |= jwt.ValidationErrorIssuer
 	}
@@ -41,11 +65,11 @@ func (c *JWTClaims) Valid() error {
 		vErr.Inner = fmt.Errorf("token is expired")
 		vErr.Errors |= jwt.ValidationErrorExpired
 	}
-	if !IsValidRole(c.AccessRole) {
-		vErr.Inner = fmt.Errorf("invalid accessRole")
+	if !IsValidRole(c.Role, config) {
+		vErr.Inner = fmt.Errorf("invalid role")
 		vErr.Errors |= jwt.ValidationErrorClaimsInvalid
 	}
-	if !IsValidType(c.Type) {
+	if !IsValidType(c.Type, config) {
 		vErr.Inner = fmt.Errorf("invalid type")
 		vErr.Errors |= jwt.ValidationErrorClaimsInvalid
 	}
@@ -57,14 +81,14 @@ func (c *JWTClaims) Valid() error {
 	return nil
 }
 
-func (s *AuthService) CreateJWTWithClaims(tokenType string, duration time.Duration, userId string, accessRole string) (string, error) {
+func (s *AuthService) CreateJWTWithClaims(tokenType string, duration time.Duration, userId string, role string) (string, error) {
 	claims := &JWTClaims{
 		Type:      tokenType,
 		Issuer:    s.JWTConfig.Issuer,
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(duration).Unix(),
 		UserId:    userId,
-		Role:      accessRole,
+		Role:      role,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -79,7 +103,7 @@ func (s *AuthService) CreateJWTWithClaims(tokenType string, duration time.Durati
 
 func (s *AuthService) ParseJWT(tokenStr string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return s.JWTConfig.Secret.JWTSecret, nil
+		return s.JWTConfig.Secret, nil
 	})
 
 	if err != nil {
@@ -87,6 +111,10 @@ func (s *AuthService) ParseJWT(tokenStr string) (*JWTClaims, error) {
 	}
 
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		err := claims.ValidateWithConfig(s.JWTConfig)
+		if err != nil {
+			return nil, err
+		}
 		return claims, nil
 	}
 

@@ -12,8 +12,9 @@ type Service struct {
 	IsInitialized bool                                         `json:"is_initialized"`
 	InitFunction  func(service *Service, server *Server) error `json:"-"`
 
-	Routes       []Route    `json:"routes"`
-	Dependencies []*Service `json:"dependencies"`
+	Routes       []Route       `json:"routes"`
+	Middlewares  []*Middleware `json:"middlewares"`
+	Dependencies []*Service    `json:"dependencies"`
 }
 
 func NewService(service Service) *Service {
