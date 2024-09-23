@@ -8,13 +8,22 @@ import (
 )
 
 type AuthServiceConfig struct {
-	Name    string
-	Subpath string
+	Name      string
+	Subpath   string
+	JWTConfig JWTConfig
+}
+
+type JWTConfig struct {
+	Issuer string
+	Secret []byte
+	Types  []string
+	Roles  []string
 }
 
 type AuthService struct {
 	*notrhttp.Service
 	DBService *db_service.DBService
+	JWTConfig JWTConfig
 }
 
 func NewAuthService(config AuthServiceConfig, dbService *db_service.DBService) *notrhttp.Service {
