@@ -1,6 +1,10 @@
 package dash_service
 
 import (
+	"fmt"
+	"io"
+	"net/http"
+	"path/filepath"
 	"runtime"
 
 	notrhttp "github.com/Notr-Dev/notr-http"
@@ -31,8 +35,6 @@ func NewDashService(config DashServiceConfig) *DashService {
 			Name: config.Name,
 			Path: config.Subpath,
 			InitFunction: func(service *notrhttp.Service, server *notrhttp.Server) error {
-				server.ServeHttpFileSystem(config.Subpath, dash_service_ui.BuildHTTPFS())
-
 				wrapper.server = server
 
 				return nil
@@ -55,6 +57,42 @@ func NewDashService(config DashServiceConfig) *DashService {
 								"numGC":      m.NumGC,
 							},
 						})
+					},
+				},
+				{
+					Method: "GET",
+					Path:   "/{filename...}",
+					Handler: func(rw notrhttp.Writer, r *notrhttp.Request) {
+						filename := r.Params["filename"]
+						if filename == "" {
+							filename = "index.html"
+						}
+						file, err := dash_service_ui.BuildHTTPFS().Open(filename)
+						if err != nil {
+							http.Error(rw, "File not found", http.StatusNotFound)
+							return
+						}
+						defer file.Close()
+
+						mimType := "application/octet-stream"
+						if filepath.Ext(filename) == ".html" {
+							fmt.Printf("Serving html file: %s\n", filename)
+							mimType = "text/html"
+						}
+						if filepath.Ext(filename) == ".css" {
+							fmt.Printf("Serving css file: %s\n", filename)
+							mimType = "text/css"
+						}
+						if filepath.Ext(filename) == ".js" {
+							fmt.Printf("Serving js file: %s\n", filename)
+							mimType = "application/javascript"
+						}
+
+						rw.Header().Set("Content-Type", mimType)
+
+						if _, err := io.Copy(rw, file); err != nil {
+							http.Error(rw, "Error serving file", http.StatusInternalServerError)
+						}
 					},
 				},
 			},
