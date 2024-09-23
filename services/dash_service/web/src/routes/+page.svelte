@@ -3,13 +3,7 @@
   import { fetchPath } from "$lib"
 </script>
 
-{#await fetchPath("/details")}
-  <p>loading...</p>
-{:then data}
-  <h1>{data.name}</h1>
-{:catch error}
-  <p>{error.message}</p>
-{/await}
+<h2>Services</h2>
 
 {#await fetchPath("/services")}
   <p>loading...</p>
