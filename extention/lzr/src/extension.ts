@@ -19,6 +19,41 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from lzr!');
 	});
 
+	// Register hover provider for Go-like variables in .lzr files
+    const hoverProvider = vscode.languages.registerHoverProvider('lzr', {
+		provideHover(document, position, token) {
+			const wordRangeGoVar = document.getWordRangeAtPosition(position, /\{\{\s*[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*\s*\}\}/);
+			const wordRangeHtml = document.getWordRangeAtPosition(position);
+			const wordHtml = document.getText(wordRangeHtml);
+			
+			// Check for Go variable hover
+			if (wordRangeGoVar) {
+				const goVariable = document.getText(wordRangeGoVar);
+				return new vscode.Hover(`Go Variable: ${goVariable}`);
+			}
+	
+			// Check for HTML element hover (this is basic; you can enhance it)
+			if (wordHtml) {
+				return new vscode.Hover(`HTML Element: ${wordHtml}`);
+			}
+	
+			return undefined; // Return undefined if no hover is applicable
+		}
+	});
+	
+
+    // Register autocompletion provider for Go-like variables in .lzr files
+    const completionProvider = vscode.languages.registerCompletionItemProvider('lzr', {
+        provideCompletionItems(document, position, token, context) {
+            const completionItem = new vscode.CompletionItem('Name', vscode.CompletionItemKind.Variable);
+            completionItem.detail = 'A Go variable';
+            completionItem.insertText = '{{ .Name }}';
+            return [completionItem];
+        }
+    });
+
+	context.subscriptions.push(hoverProvider);
+    context.subscriptions.push(completionProvider);
 	context.subscriptions.push(disposable);
 }
 

@@ -17,6 +17,25 @@
         "command": "lzr.helloWorld",
         "title": "Hello World"
       }
+    ],
+    "languages": [
+      {
+        "id": "lzr",
+        "aliases": [
+          "LZR"
+        ],
+        "extensions": [
+          ".lzr"
+        ],
+        "configuration": "./src/confs/language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "lzr",
+        "scopeName": "text.html.lzr",
+        "path": "./src/syntaxes/lzr.tmLanguage.json"
+      }
     ]
   },
   "scripts": {

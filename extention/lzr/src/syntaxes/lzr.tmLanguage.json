@@ -1,0 +1,12 @@
+{
+  "scopeName": "text.html.lzr",
+  "patterns": [
+    {
+      "include": "text.html.basic"
+    },
+    {
+      "name": "variable.other.golang.lzr",
+      "match": "\\{\\{\\s*\\.[a-zA-Z0-9_]+\\s*\\}\\}"
+    }
+  ]
+}
