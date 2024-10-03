@@ -1,4 +1,5 @@
 <go>
+
   package main
 
   import "fmt"
@@ -9,6 +10,7 @@
   if data.Name == "" {
     data.Name = "World"
   }
+
 </go>
 
 <section>
@@ -17,10 +19,13 @@
 
 <p></p>
 
-
-
 <style>
 section {
+  background-color: #f0f0f0;
+  padding: 20px;
+  margin: 20px;
+}
+section{
   background-color: #f0f0f0;
   padding: 20px;
   margin: 20px;

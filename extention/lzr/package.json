@@ -34,7 +34,12 @@
       {
         "language": "lzr",
         "scopeName": "source.lzr",
-        "path": "./src/syntaxes/lzr.tmLanguage.json"
+        "path": "./src/syntaxes/lzr.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.css": "css",
+          "source.go": "go",
+          "source.html": "html"
+        }
       }
     ]
   },

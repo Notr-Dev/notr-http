@@ -10,7 +10,8 @@
     "html": {
       "patterns": [
         {
-          "include": "text.html.basic"
+          "name": "meta.embedded.block.html",
+          "include": "#textHtml"
         },
         {
           "begin": "<style>",
@@ -18,7 +19,7 @@
           "name": "meta.embedded.block.css",
           "patterns": [
             {
-              "include": "source.css"
+              "include": "#css"
             }
           ]
         },
@@ -28,9 +29,30 @@
           "name": "meta.embedded.block.golang",
           "patterns": [
             {
-              "include": "source.go"
+              "include": "#go"
             }
           ]
+        }
+      ]
+    },
+    "textHtml": {
+      "patterns": [
+        {
+          "include": "text.html.basic"
+        }
+      ]
+    },
+    "css": {
+      "patterns": [
+        {
+          "include": "source.css"
+        }
+      ]
+    },
+    "go": {
+      "patterns": [
+        {
+          "include": "source.go"
         }
       ]
     }
