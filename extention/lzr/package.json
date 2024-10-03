@@ -33,7 +33,7 @@
     "grammars": [
       {
         "language": "lzr",
-        "scopeName": "text.html.lzr",
+        "scopeName": "source.lzr",
         "path": "./src/syntaxes/lzr.tmLanguage.json"
       }
     ]
