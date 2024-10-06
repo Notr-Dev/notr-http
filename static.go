@@ -46,6 +46,9 @@ func (s *Server) ServeStaticWebsite(path string, dir string) {
 			Path:   path + "/{filename}",
 			Handler: func(rw Writer, r *Request) {
 				filename := r.Params["filename"]
+				if filepath.Ext(filename) == "" {
+					filename = filepath.Join(filename, "index.html")
+				}
 				filePath := filepath.Join(dir, filename)
 				fmt.Println("Serving file: ", filePath)
 
