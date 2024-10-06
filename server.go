@@ -57,7 +57,7 @@ func (s *Server) Run() error {
 		return err
 	}
 
-	s.Get("/", func(rw Writer, r *Request) {
+	s.Get("/api/", func(rw Writer, r *Request) {
 		rw.RespondWithSuccess(map[string]string{
 			"message": fmt.Sprintf("Welcome to the %s Rest API.", s.Name),
 			"version": s.Version,
