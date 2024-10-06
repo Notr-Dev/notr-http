@@ -43,7 +43,7 @@ func (s *Server) ServeStaticWebsite(path string, dir string) {
 	s.Routes = append(s.Routes,
 		Route{
 			Method: http.MethodGet,
-			Path:   path + "/{filename}",
+			Path:   path + "/{filename...}",
 			Handler: func(rw Writer, r *Request) {
 				filename := r.Params["filename"]
 				if filepath.Ext(filename) == "" {
