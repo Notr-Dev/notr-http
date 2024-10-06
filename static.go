@@ -37,6 +37,9 @@ func (s *Server) ServeStatic(path string, dir string) {
 }
 
 func (s *Server) ServeStaticWebsite(path string, dir string) {
+	if path == "/" {
+		path = ""
+	}
 	s.Routes = append(s.Routes,
 		Route{
 			Method: http.MethodGet,
