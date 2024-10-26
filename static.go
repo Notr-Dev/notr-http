@@ -36,6 +36,39 @@ func (s *Server) ServeStatic(path string, dir string) {
 	)
 }
 
+func (s *Server) ServeStaticWebsite(path string, dir string) {
+	if path == "/" {
+		path = ""
+	}
+	s.Routes = append(s.Routes,
+		Route{
+			Method: http.MethodGet,
+			Path:   path + "/{filename...}",
+			Handler: func(rw Writer, r *Request) {
+				filename := r.Params["filename"]
+				if filepath.Ext(filename) == "" {
+					filename = filepath.Join(filename, "index.html")
+				}
+				filePath := filepath.Join(dir, filename)
+				fmt.Println("Serving file: ", filePath)
+
+				file, err := os.Open(filePath)
+				if err != nil {
+					http.Error(rw, "File not found", http.StatusNotFound)
+					return
+				}
+				defer file.Close()
+
+				rw.Header().Set("Content-Type", mime.TypeByExtension(filepath.Ext(filePath)))
+
+				if _, err := io.Copy(rw, file); err != nil {
+					http.Error(rw, "Error serving file", http.StatusInternalServerError)
+				}
+			},
+		},
+	)
+}
+
 func (s *Server) ServeHttpFileSystem(path string, fs http.FileSystem) {
 	s.Routes = append(s.Routes, Route{
 		Method: http.MethodGet,

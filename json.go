@@ -2,11 +2,20 @@ package notrhttp
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 )
 
 func (r *Request) GetJSONBody(v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
+}
+
+func (r *Request) GetStringBody() (string, error) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
 
 func (rw *Writer) RespondWithJson(code int, payload interface{}) {

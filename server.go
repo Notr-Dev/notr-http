@@ -57,29 +57,29 @@ func (s *Server) Run() error {
 		return err
 	}
 
-	appendRoutes(s)
-
-	startJobs(s)
-
-	fmt.Println("Started " + s.Name)
-
-	s.Get("/", func(rw Writer, r *Request) {
+	s.Get("/api/", func(rw Writer, r *Request) {
 		rw.RespondWithSuccess(map[string]string{
 			"message": fmt.Sprintf("Welcome to the %s Rest API.", s.Name),
 			"version": s.Version,
 		})
 	})
 
+	appendRoutes(s)
+
+	startJobs(s)
+
+	fmt.Println("Started " + s.Name)
+
 	return http.ListenAndServe(s.Port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wasRightPath := false
 		for _, route := range s.Routes {
 			isMatch, params := matchPath(r.URL.Path, route.Path)
 			if isMatch {
-				fmt.Printf("Matched %s with %s\n", r.URL.Path, route.Path)
-				fmt.Println(params)
+				// fmt.Printf("Matched %s with %s\n", r.URL.Path, route.Path)
+				// fmt.Println(params)
 				wasRightPath = true
 				if r.Method == route.Method {
-					// TO DO: fix middlewares
+					fmt.Println("Matched route", r.URL.Path)
 					route.Handler(Writer{w, false}, &Request{r, params})
 					return
 				}
@@ -94,18 +94,37 @@ func (s *Server) Run() error {
 }
 
 func appendRoutes(s *Server) {
-	for _, service := range s.Services {
-		for _, route := range service.Routes {
-			route.Middlewares = append(s.Middlewares, route.Middlewares...)
-			route.Middlewares = append(service.Middlewares, route.Middlewares...)
+	for i := range s.Routes {
+		route := &s.Routes[i]
+
+		combinedMiddlewares := make([]*Middleware, 0, len(s.Middlewares)+len(route.Middlewares))
+		combinedMiddlewares = append(combinedMiddlewares, s.Middlewares...)
+		combinedMiddlewares = append(combinedMiddlewares, route.Middlewares...)
+
+		route.Middlewares = combinedMiddlewares
+	}
+
+	for i := range s.Services {
+		service := s.Services[i]
+		for j := range service.Routes {
+			route := &service.Routes[j]
+
+			combinedMiddlewares := make([]*Middleware, 0, len(s.Middlewares)+len(route.Middlewares)+len(service.Middlewares))
+			combinedMiddlewares = append(combinedMiddlewares, s.Middlewares...)
+			combinedMiddlewares = append(combinedMiddlewares, service.Middlewares...)
+			combinedMiddlewares = append(combinedMiddlewares, route.Middlewares...)
+
+			route.Middlewares = combinedMiddlewares
 		}
 		s.Routes = append(s.Routes, service.Routes...)
 	}
 
-	for _, route := range s.Routes {
-		for _, middleware := range s.Middlewares {
-			route.Handler = (*middleware)(route.Handler)
+	for i := range s.Routes {
+		originalHandler := s.Routes[i].Handler
+		for j := len(s.Routes[i].Middlewares) - 1; j >= 0; j-- {
+			originalHandler = (*s.Routes[i].Middlewares[j])(originalHandler)
 		}
+		s.Routes[i].Handler = originalHandler
 	}
 }
 
