@@ -30,6 +30,9 @@ func NewServer(server Server) *Server {
 	if server.Port == "" {
 		panic("Port is required")
 	}
+	if server.Port[0] != ':' {
+		server.Port = ":" + server.Port
+	}
 	if server.Version == "" {
 		panic("Version is required")
 	}
